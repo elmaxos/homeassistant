@@ -1,0 +1,16 @@
+alias: Tesla alles aktualisieren
+sequence:
+  - if:
+      - condition: template
+        value_template: "{{ not is_state('binary_sensor.fky_status', 'on') }}"
+    then:
+      - action: button.press
+        target:
+          entity_id: button.fky_wecken
+      - wait_template: "{{ is_state('binary_sensor.fky_status', 'on') }}"
+        timeout: '00:00:30'
+        continue_on_timeout: true
+  - action: homeassistant.update_entity
+    target:
+      entity_id: "{{ integration_entities('tesla_fleet') }}"
+mode: single
