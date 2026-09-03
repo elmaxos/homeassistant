@@ -1,0 +1,105 @@
+alias: Tesla Fenster Automatik
+description: Regen, Hitze und Nachtabschaltung für die Tesla-Fenster
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.openweathermap_niederschlagsart
+    id: regen
+  - trigger: state
+    entity_id:
+      - binary_sensor.zu_heiss_im_auto
+    to: 'on'
+    id: hitze_an
+  - trigger: state
+    entity_id:
+      - binary_sensor.zu_heiss_im_auto
+    to: 'off'
+    id: hitze_aus
+  - trigger: time
+    at: '21:00:00'
+    id: nacht
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: regen
+        sequence:
+          - if:
+              - condition: window.is_open
+                target:
+                  entity_id: cover.fky_fenster
+                options:
+                  behavior: any
+                  for: '00:00:00'
+            then:
+              - action: cover.close_cover
+                target:
+                  entity_id: cover.fky_fenster
+              - action: script.tts_ansage_an_alle_gerate
+                data:
+                  message: Achtung, es regnet. Tesla Fenster werden geschlossen.
+            else:
+              - action: script.tts_ansage_an_alle_gerate
+                data:
+                  message: >-
+                    Achtung, es regnet. Die Fenster vom Tesla scheinen
+                    geschlossen zu sein. Aber willst du es wirklich riskieren?
+      - conditions:
+          - condition: trigger
+            id: hitze_an
+          - condition: state
+            entity_id: input_boolean.tesla_fensterautomatik
+            state: 'on'
+          - condition: time
+            after: '08:00:00'
+            before: '20:30:00'
+          - condition: window.is_closed
+            target:
+              entity_id: cover.fky_fenster
+            options:
+              behavior: any
+              for: '00:00:00'
+        sequence:
+          - action: cover.open_cover
+            target:
+              entity_id: cover.fky_fenster
+          - action: script.tts_ansage_an_alle_gerate
+            data:
+              message: >-
+                Im Tesla sind {{ states('sensor.fky_innentemperatur') | round(0)
+                }} Grad. Die Fenster werden zum Lüften geöffnet.
+      - conditions:
+          - condition: trigger
+            id: hitze_aus
+          - condition: window.is_open
+            target:
+              entity_id: cover.fky_fenster
+            options:
+              behavior: any
+              for: '00:00:00'
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.fky_fenster
+          - action: script.tts_ansage_an_alle_gerate
+            data:
+              message: Im Tesla ist es wieder kühler. Die Fenster werden geschlossen.
+      - conditions:
+          - condition: trigger
+            id: nacht
+          - condition: window.is_open
+            target:
+              entity_id: cover.fky_fenster
+            options:
+              behavior: any
+              for: '00:00:00'
+        sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: cover.fky_fenster
+          - action: script.tts_ansage_an_alle_gerate
+            data:
+              message: Es ist 21 Uhr. Die Tesla Fenster werden geschlossen.
+mode: queued
+max: 5
