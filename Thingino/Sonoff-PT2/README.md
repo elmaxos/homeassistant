@@ -1,0 +1,4 @@
+- reset camera wifi: press & hold reset button, plug in, wait 5 seconds, release and wait, because camera won't do anything for a minute
+- camera IP: 172.16.0.1
+- after setup: wait for reboot (camera moves)
+- reset deeletes all settings
