@@ -1,0 +1,52 @@
+- id: '1788376476692'
+  alias: Müllabfuhr Ansage
+  description: Erinnerung am Vorabend und am Abholtag
+  triggers:
+  - trigger: time
+    at: '18:00:00'
+    id: vorabend
+  - trigger: time
+    at: '20:00:00'
+    id: vorabend
+  - trigger: time
+    at: 08:00:00
+    id: abholtag
+  - trigger: time
+    at: 09:00:00
+    id: abholtag
+  - trigger: time
+    at: 09:30:00
+    id: abholtag
+  conditions: []
+  actions:
+  - variables:
+      quelle: '{{ trigger.id if trigger is defined and trigger.id is defined else
+        ''manuell'' }}'
+  - variables:
+      morgen: '{{ quelle == ''vorabend'' or (quelle == ''manuell'' and now().hour
+        >= 12) }}'
+      tag: '{{ (now() + timedelta(days=1 if (quelle == ''vorabend'' or (quelle ==
+        ''manuell'' and now().hour >= 12)) else 0)).strftime(''%Y-%m-%d'') }}'
+  - action: calendar.get_events
+    target:
+      entity_id: calendar.mullabfuhr
+    data:
+      start_date_time: '{{ tag }} 00:00:00'
+      duration:
+        hours: 24
+    response_variable: termine
+  - condition: template
+    value_template: '{{ termine[''calendar.mullabfuhr''].events | count > 0 }}'
+  - variables:
+      tonnen: '{{ termine[''calendar.mullabfuhr''].events | map(attribute=''summary'')
+        | join('' und '') }}'
+  - action: script.tts_ansage_an_alle_gerate
+    metadata: {}
+    data:
+      message: '{% if morgen %}Erinnerung: Morgen wird Müll abgeholt. {{ tonnen }}.
+        Bitte heute Abend noch rausstellen. {% else %}Achtung, heute wird Müll abgeholt.
+        {{ tonnen }}. Steht die Tonne schon draußen?{% endif %}'
+      zweimal: true
+      warten: true
+  mode: queued
+  max: 5
