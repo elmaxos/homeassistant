@@ -1,6 +1,7 @@
 # TTS-Ansagen auf Thingino-Kameras
 
-Nur zwei Skripte sind aktiv: `tts_cam_sound_text` (Kameras) und `tts_an_alle_geraete` (Handy + Kameras).
+Es gibt nur noch ein Ansage-Skript: `tts_cam_sound_text`. Ziele sind die Kameras und das Handy (Option `handy`, Android-TTS, nur Text).
+Die Automationen rufen es mit `kameras: [wohnzimmer, handy]` auf. Der frühere Verteiler `tts_an_alle_geraete` wurde entfernt.
 Alte Varianten (`tts_kamera_3684`, `tts_kamera`, `tts_cam_sound`, `gong`, `thingino_tts_ansage` und die Test-Skripte) wurden am 29.09.2026 entfernt.
 
 Sprachausgabe: Piper (HA-Add-on, Engine `tts.piper`) erzeugt eine MP3 -> `rest_command.thingino_tts`
@@ -24,7 +25,6 @@ holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ord
 | `tts_cam_sound_text.yaml` | Hauptskript: Sound und/oder Text auf einer oder mehreren Kameras. Felder: Nachricht, Kameras, Sound, Stimme, Pause nach Sound, Zweimal, Auf Anwesenheit warten, Licht einschalten. |
 | `tts_test_4420.yaml` | Testaufruf für die Kamera 4420. |
 | `tts_zeitansage.yaml` | Stündliche Zeitansage (nutzt das Hauptskript). |
-| `tts_an_alle_geraete.yaml` | Verteiler: gleiche Optionen wie das Hauptskript plus „Auch auf dem Handy“; schickt die Ansage parallel ans Handy (`notify.mobile_app_sm_g781b`) und über `tts_cam_sound_text` an die Kameras. Wird von den Automationen (Tesla, Müllabfuhr, Keller, offene Türen) genutzt. |
 
 Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-sonoff-pt2-4420`, `handy` = Android-TTS auf
 `notify.mobile_app_sm_g781b` (nur der Text, kein Sound, kein Licht; Piper wird dafür nicht aufgerufen).

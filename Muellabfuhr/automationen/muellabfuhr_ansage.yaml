@@ -40,9 +40,12 @@
   - variables:
       tonnen: '{{ termine[''calendar.mullabfuhr''].events | map(attribute=''summary'')
         | join('' und '') }}'
-  - action: script.tts_an_alle_geraete
+  - action: script.tts_cam_sound_text
     metadata: {}
     data:
+      kameras:
+      - wohnzimmer
+      - handy
       message: '{% if morgen %}Erinnerung: Morgen wird Müll abgeholt. {{ tonnen }}.
         Bitte heute Abend noch rausstellen. {% else %}Achtung, heute wird Müll abgeholt.
         {{ tonnen }}. Steht die Tonne schon draußen?{% endif %}'
