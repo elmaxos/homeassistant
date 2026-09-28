@@ -49,7 +49,7 @@ tesla_statusansage:
       offene_fenster: "{%- set ns = namespace(l=[]) -%} {%- for e, n in fenster.items()
         -%}\n  {%- if is_state(e, 'on') -%}{%- set ns.l = ns.l + [n] -%}{%- endif
         -%}\n{%- endfor -%} {{ ns.l }}"
-      alter_min: "{{ ((now() - (expand(frische_entitaeten)\n     | map(attribute='last_updated')
+      alter_min: "{{ ((now() - (expand(frische_entitaeten)\n     | map(attribute='last_reported')
         | max)).total_seconds() / 60)\n     | round | int }}"
   - variables:
       text: '{%- macro liste(items) -%}
@@ -223,5 +223,6 @@ tesla_statusansage:
       message: '{{ ansage }}'
       kameras: '{{ kameras | default([''wohnzimmer'']) }}'
       sound: notification
-      warten: 'false'
+      warten: false
+      voice: de_DE-thorsten-low
   mode: single
