@@ -40,7 +40,7 @@
   - variables:
       tonnen: '{{ termine[''calendar.mullabfuhr''].events | map(attribute=''summary'')
         | join('' und '') }}'
-  - action: script.tts_ansage_an_alle_gerate
+  - action: script.tts_an_alle_geraete
     metadata: {}
     data:
       message: '{% if morgen %}Erinnerung: Morgen wird Müll abgeholt. {{ tonnen }}.

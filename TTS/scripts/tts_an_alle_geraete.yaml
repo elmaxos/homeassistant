@@ -1,0 +1,136 @@
+tts_an_alle_geraete:
+  alias: TTS an alle Geräte
+  description: Verteilt eine Sprachansage an das Handy und an die Kameras (über script.tts_cam_sound_text)
+  fields:
+    message:
+      name: Nachricht
+      description: Der Text, der vorgelesen werden soll. Leer lassen für nur Sound.
+      required: false
+      default: ''
+      selector:
+        text:
+    kameras:
+      name: Kameras
+      description: Auf welchen Kameras abgespielt werden soll
+      required: false
+      default:
+      - wohnzimmer
+      selector:
+        select:
+          multiple: true
+          options:
+          - label: Wohnzimmer (3684)
+            value: wohnzimmer
+          - label: SONOFF PT2 4 (4420)
+            value: kamera4420
+    sound:
+      selector:
+        select:
+          options:
+          - label: Kein Sound
+            value: keiner
+          - label: Gong (Cam)
+            value: chime
+          - label: Klingel
+            value: bell
+          - label: Alarm
+            value: alarm
+          - label: Hinweis
+            value: notification
+          - label: Music Trap
+            value: music_trap
+          - label: 21st Century Fox
+            value: 21st_century_fox
+          - label: 12 Uhr
+            value: 12uhr
+      default: chime
+    voice:
+      selector:
+        select:
+          options:
+          - label: Eva LOW
+            value: de_DE-eva_k-x_low
+          - label: Karlsson LOW
+            value: de_DE-karlsson-low
+          - label: Kerstin LOW
+            value: de_DE-kerstin-low
+          - label: mls MEDIUM
+            value: de_DE-mls-medium
+          - label: Pavoque LOW
+            value: de_DE-pavoque-low
+          - label: Ramona LOW
+            value: de_DE-ramona-low
+          - label: Thorsten HIGH
+            value: de_DE-thorsten-high
+          - label: Thorsten LOW
+            value: de_DE-thorsten-low
+          - label: Thorsten MEDIUM
+            value: de_DE-thorsten-medium
+          - label: Thorsten emotional MEDIUM
+            value: de_DE-thorsten_emotional-medium
+          - label: US Lessac MEDIUM
+            value: en_US-lessac-medium
+      default: de_DE-thorsten-low
+    sound_pause:
+      name: Pause nach Sound
+      description: Optional. Überschreibt die Standard-Wartezeit des gewählten Sounds.
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.5
+          unit_of_measurement: s
+          mode: box
+    zweimal:
+      name: Zweimal abspielen
+      description: Hängt den Text ein zweites Mal an
+      required: false
+      default: false
+      selector:
+        boolean:
+    warten:
+      name: Auf Anwesenheit warten
+      description: Wartet auf Bewegung, spätestens nach 30 Minuten wird trotzdem abgespielt
+      required: false
+      default: false
+      selector:
+        boolean:
+    licht:
+      name: Licht einschalten
+      description: Weißlicht der Kamera während der Ansage einschalten
+      required: false
+      default: true
+      selector:
+        boolean:
+    handy:
+      name: Auch auf dem Handy
+      description: Ansage zusätzlich auf dem Handy (sm_g781b) abspielen
+      required: false
+      default: true
+      selector:
+        boolean:
+  sequence:
+  - parallel:
+    - if:
+      - condition: template
+        value_template: '{{ handy | default(true) }}'
+      then:
+      - action: notify.mobile_app_sm_g781b
+        data:
+          message: TTS
+          data:
+            tts_text: '{% set t = message %}{{ t }}{% if zweimal | default(false) %} ... Ich wiederhole. {{ t }}{% endif %}'
+            media_stream: media_alarm
+    - action: script.tts_cam_sound_text
+      data:
+        message: '{{ message }}'
+        kameras: '{{ kameras | default([''wohnzimmer'']) }}'
+        sound: '{{ sound | default(''chime'') }}'
+        voice: '{{ voice | default(''de_DE-thorsten-low'') }}'
+        sound_pause: '{{ sound_pause | default('''') }}'
+        zweimal: '{{ zweimal | default(false) }}'
+        warten: '{{ warten | default(false) }}'
+        licht: '{{ licht | default(true) }}'
+  mode: queued
+  max: 5
