@@ -1,0 +1,2 @@
+# keep camera-side shell scripts with LF line endings on every checkout
+*.sh text eol=lf
