@@ -23,6 +23,8 @@ tts_cam_sound_text:
             value: wohnzimmer
           - label: SONOFF PT2 4 (4420)
             value: kamera4420
+          - label: Handy Max (nur Text, Android-TTS)
+            value: handy
     sound:
       selector:
         select:
@@ -137,6 +139,7 @@ tts_cam_sound_text:
           dauer: 3
       auswahl: '{% set k = kameras | default([''wohnzimmer'']) %} {{ [k] if k is string
         else k }}'
+      cams: '{{ auswahl | reject(''eq'', ''handy'') | list }}'
       s_key: '{{ sound | default(''chime'') }}'
       datei: '{{ sounds[s_key].datei if s_key in sounds else '''' }}'
       effektive_pause: "{% if sound_pause is defined and sound_pause is not none and
@@ -181,7 +184,7 @@ tts_cam_sound_text:
       value_template: '{{ datei != '''' }}'
     then:
     - repeat:
-        for_each: '{{ auswahl }}'
+        for_each: '{{ cams }}'
         sequence:
         - action: mqtt.publish
           data:
@@ -193,13 +196,27 @@ tts_cam_sound_text:
     - condition: template
       value_template: '{{ text != '''' }}'
     then:
-    - action: rest_command.thingino_tts
-      data:
-        message: '{{ text }}'
-        voice: '{{ voice }}'
-      response_variable: tts_result
+    - if:
+      - condition: template
+        value_template: '{{ cams | length > 0 }}'
+      then:
+      - action: rest_command.thingino_tts
+        data:
+          message: '{{ text }}'
+          voice: '{{ voice }}'
+        response_variable: tts_result
+    - if:
+      - condition: template
+        value_template: '{{ ''handy'' in auswahl }}'
+      then:
+      - action: notify.mobile_app_sm_g781b
+        data:
+          message: TTS
+          data:
+            tts_text: '{{ text }}'
+            media_stream: media_alarm
     - repeat:
-        for_each: '{{ auswahl }}'
+        for_each: '{{ cams }}'
         sequence:
         - action: mqtt.publish
           data:

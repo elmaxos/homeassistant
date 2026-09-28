@@ -26,7 +26,8 @@ holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ord
 | `tts_zeitansage.yaml` | Stündliche Zeitansage (nutzt das Hauptskript). |
 | `tts_an_alle_geraete.yaml` | Verteiler: gleiche Optionen wie das Hauptskript plus „Auch auf dem Handy“; schickt die Ansage parallel ans Handy (`notify.mobile_app_sm_g781b`) und über `tts_cam_sound_text` an die Kameras. Wird von den Automationen (Tesla, Müllabfuhr, Keller, offene Türen) genutzt. |
 
-Kameras im Hauptskript (`geraete`): `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-sonoff-pt2-4420`.
+Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-sonoff-pt2-4420`, `handy` = Android-TTS auf
+`notify.mobile_app_sm_g781b` (nur der Text, kein Sound, kein Licht; Piper wird dafür nicht aufgerufen).
 Neue Kamera: Eintrag mit `topic`, `licht` (Weißlicht-Switch) und optional `bewegung` ergänzen und die Option
 in allen `kameras`-Selektoren nachziehen.
 
