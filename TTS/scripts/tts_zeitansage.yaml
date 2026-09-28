@@ -1,0 +1,15 @@
+tts_zeitansage:
+  alias: tts_zeitansage
+  description: Klingel und Zeitansage per TTS auf der Kamera
+  mode: restart
+  sequence:
+  - variables:
+      stunde: '{{ now().hour | int }}'
+      minute: '{{ now().minute | int }}'
+  - action: script.tts_cam_sound_text
+    data:
+      message: '{{ stunde }} Uhr{% if minute > 0 %} {{ minute }}{% endif %}'
+      kameras:
+      - wohnzimmer
+      voice: de_DE-thorsten-low
+      sound: keiner

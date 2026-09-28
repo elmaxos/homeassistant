@@ -1,0 +1,227 @@
+tesla_statusansage:
+  alias: tts_tesla_statusansage
+  description: Baut einen Statustext zum Tesla und gibt ihn per tts_cam_sound_text
+    aus
+  fields:
+    kameras:
+      name: Kameras
+      description: Auf welchen Kameras abgespielt werden soll
+      required: false
+      default:
+      - wohnzimmer
+      selector:
+        select:
+          multiple: true
+          options:
+          - label: Wohnzimmer (3684)
+            value: wohnzimmer
+          - label: SONOFF PT2 4 (4420)
+            value: kamera4420
+  sequence:
+  - action: script.tesla_poll_jetzt_test
+    metadata: {}
+    data: {}
+  - variables:
+      tueren:
+        binary_sensor.fky_fahrertur_vorne: die Fahrertür vorne
+        binary_sensor.fky_fahrertur_hinten: die Fahrertür hinten
+        binary_sensor.fky_beifahrertur_vorne: die Beifahrertür vorne
+        binary_sensor.fky_beifahrertur_hinten: die Beifahrertür hinten
+        cover.fky_front_kofferraum: der vordere Kofferraum
+        cover.fky_kofferraum: der hintere Kofferraum
+      fenster:
+        binary_sensor.fky_fahrerfenster_vorne: das Fahrerfenster vorne
+        binary_sensor.fky_fahrerfenster_hinten: das Fahrerfenster hinten
+        binary_sensor.fky_beifahrerfenster_vorne: das Beifahrerfenster vorne
+        binary_sensor.fky_beifahrerfenster_hinten: das Beifahrerfenster hinten
+      frische_entitaeten:
+      - sensor.fky_batteriestand
+      - sensor.fky_innentemperatur
+      - sensor.fky_aussentemperatur
+      - sensor.fky_kilometerzahler
+      - sensor.fky_batteriereichweite
+      - sensor.fky_ladestatus
+      - device_tracker.fky_standort
+  - variables:
+      offene_tueren: "{%- set ns = namespace(l=[]) -%} {%- for e, n in tueren.items()
+        -%}\n  {%- if states(e) in ['on', 'open'] -%}{%- set ns.l = ns.l + [n] -%}{%-
+        endif -%}\n{%- endfor -%} {{ ns.l }}"
+      offene_fenster: "{%- set ns = namespace(l=[]) -%} {%- for e, n in fenster.items()
+        -%}\n  {%- if is_state(e, 'on') -%}{%- set ns.l = ns.l + [n] -%}{%- endif
+        -%}\n{%- endfor -%} {{ ns.l }}"
+      alter_min: "{{ ((now() - (expand(frische_entitaeten)\n     | map(attribute='last_updated')
+        | max)).total_seconds() / 60)\n     | round | int }}"
+  - variables:
+      text: '{%- macro liste(items) -%}
+
+        {%- if items | count == 1 -%}{{ items[0] }}
+
+        {%- elif items | count > 1 -%}{{ items[:-1] | join('', '') }} und {{ items[-1]
+        }}
+
+        {%- endif -%}
+
+        {%- endmacro -%}
+
+        {%- macro num(v, d=0) -%}{{ (''%.'' ~ d ~ ''f'') | format(v | float(0)) |
+        replace(''.'', '','') }}{%- endmacro -%}
+
+        {%- macro wann(e) -%}
+
+        {%- set ts = states(e) -%}
+
+        {%- if ts not in [''unknown'', ''unavailable'', ''none'', ''''] -%}
+
+        {%- set d = as_datetime(ts) -%}
+
+        {%- set m = ((d - now()).total_seconds() / 60) | round | int -%}
+
+        {%- if m < 1 -%}gleich{%- elif m < 60 -%}in {{ m }} Minuten{%- else -%}um
+        {{ as_local(d).strftime(''%H:%M'') }} Uhr{%- endif -%}
+
+        {%- endif -%}
+
+        {%- endmacro -%}
+
+
+        {%- set entfernung = states(''number.entfernung_tesla_nach_hause'') | float(0)
+        -%}
+
+        {%- set zuhause = is_state(''device_tracker.fky_standort'', ''home'') or entfernung
+        < 0.2 -%}
+
+        {%- set ziel = states(''sensor.fky_ziel'') -%}
+
+        {%- set hat_ziel = ziel not in [''unknown'', ''unavailable'', ''none'', '''']
+        -%}
+
+        {%- set rest_km = states(''sensor.fky_entfernung_bis_zur_ankunft'') -%}
+
+        {%- set ankunft = wann(''sensor.fky_zeit_bis_zur_ankunft'') -%}
+
+        {%- set lade = states(''sensor.fky_ladestatus'') -%}
+
+
+        {# --- Standort --- #}
+
+        {%- if zuhause -%}
+
+        Das Auto ist zuhause.
+
+        {%- else -%}
+
+        Das Auto ist {{ num(entfernung, 1) }} Kilometer Luftlinie von zuhause entfernt
+
+        {%- if hat_ziel %} und unterwegs nach {{ ziel }}{% endif -%}.
+
+        {%- if ankunft != '''' %} Ankunft {{ ankunft }}
+
+        {%- if rest_km not in [''unknown'', ''unavailable''] %}, noch {{ num(rest_km)
+        }} Kilometer{% endif -%}.
+
+        {%- endif -%}
+
+        {%- endif %}
+
+
+        {# --- Akku --- #}
+
+        Der Akkustand beträgt {{ num(states(''sensor.fky_batteriestand'')) }} Prozent,
+
+        beziehungsweise {{ num(states(''sensor.fky_batteriereichweite'')) }} Kilometer.
+
+
+        {# --- Laden --- #}
+
+        {%- if lade in [''charging'', ''starting''] %}
+
+        Es wird derzeit mit {{ num(states(''sensor.fky_ladegerat_leistung''), 1) }}
+        Kilowatt
+
+        bis {{ num(states(''number.fky_ladelimit'')) }} Prozent geladen
+
+        {%- set fertig = wann(''sensor.fky_zeit_zum_vollstandigen_aufladen'') -%}
+
+        {%- if fertig != '''' %} und ist {{ fertig }} fertig{% endif -%}.
+
+        {%- elif lade == ''complete'' and is_state(''binary_sensor.fky_ladekabel'',
+        ''on'') %}
+
+        Der Ladevorgang ist abgeschlossen.
+
+        {%- elif lade == ''stopped'' %}
+
+        Der Ladevorgang ist unterbrochen.
+
+        {%- elif zuhause and lade == ''disconnected'' %}
+
+        Das Ladekabel ist nicht angesteckt.
+
+        {%- endif %}
+
+
+        {# --- Türen & Fenster --- #}
+
+        {%- if offene_tueren | count == 0 %}
+
+        Die Türen sind {{ ''verriegelt'' if is_state(''lock.fky_schloss'', ''locked'')
+        else ''geschlossen, aber nicht verriegelt'' }}
+
+        {%- else %}
+
+        Offen sind {{ liste(offene_tueren) }}
+
+        {%- endif -%}
+
+        {{ '' und '' }}
+
+        {%- if offene_fenster | count == 0 -%}
+
+        die Fenster sind geschlossen.
+
+        {%- else -%}
+
+        {{ liste(offene_fenster) }} {{ ''ist'' if offene_fenster | count == 1 else
+        ''sind'' }} offen.
+
+        {%- endif %}
+
+
+        {# --- Temperatur --- #}
+
+        Die Temperatur im Fahrzeug beträgt {{ num(states(''sensor.fky_innentemperatur''),
+        1) }}
+
+        und außen {{ num(states(''sensor.fky_aussentemperatur''), 1) }} Grad.
+
+
+        {# --- Datenalter --- #}
+
+        {%- if alter_min < 3 %}
+
+        Diese Informationen sind aktuell.
+
+        {%- elif alter_min < 60 %}
+
+        Diese Informationen wurden zuletzt vor {{ alter_min }} Minuten aktualisiert.
+
+        {%- elif alter_min < 1440 %}
+
+        Diese Informationen wurden zuletzt vor {{ (alter_min / 60) | round | int }}
+        Stunden aktualisiert.
+
+        {%- else %}
+
+        Diese Informationen wurden zuletzt vor {{ (alter_min / 1440) | round | int
+        }} Tagen aktualisiert.
+
+        {%- endif -%}'
+  - variables:
+      ansage: '{{ text | regex_replace(''\s+'', '' '') | trim }}'
+  - action: script.tts_cam_sound_text
+    data:
+      message: '{{ ansage }}'
+      kameras: '{{ kameras | default([''wohnzimmer'']) }}'
+      sound: notification
+      warten: 'false'
+  mode: single

@@ -1,0 +1,13 @@
+tts_test_4420:
+  alias: TTS Test Kamera 4420
+  description: Testet Sprachausgabe auf der Kamera ing-sonoff-pt2-4420 (SONOFF PT2
+    4)
+  sequence:
+  - action: script.tts_cam_sound_text
+    data:
+      kameras:
+      - kamera4420
+      sound: chime
+      voice: de_DE-thorsten-low
+      message: Hallo, das ist ein Test der Sprachausgabe auf der vierten Kamera.
+  mode: single

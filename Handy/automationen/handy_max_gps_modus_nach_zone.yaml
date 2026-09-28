@@ -1,0 +1,56 @@
+- id: '1790600009685'
+  alias: Handy Max GPS-Modus nach Zone
+  description: High-Accuracy-GPS nur unterwegs, zu Hause normaler Modus (Akku). Prüft
+    alle 10 Minuten und nach jedem Zonen-/Moduswechsel, ob der Modus zur Zone passt.
+  triggers:
+  - trigger: state
+    entity_id: device_tracker.sm_g781b
+    to:
+    id: zone
+  - trigger: state
+    entity_id: binary_sensor.sm_g781b_high_accuracy_mode
+    to:
+    for: 00:02:00
+    id: modus
+  - trigger: time_pattern
+    minutes: /10
+    id: kontrolle
+  - trigger: homeassistant
+    event: start
+    id: start
+  conditions:
+  - condition: template
+    value_template: '{{ states(''device_tracker.sm_g781b'') not in [''unknown'', ''unavailable'']
+      and states(''binary_sensor.sm_g781b_high_accuracy_mode'') not in [''unknown'', ''unavailable'']
+      }}'
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: device_tracker.sm_g781b
+        state: home
+      - condition: state
+        entity_id: binary_sensor.sm_g781b_high_accuracy_mode
+        state: 'on'
+      sequence:
+      - action: notify.mobile_app_sm_g781b
+        data:
+          message: command_high_accuracy_mode
+          data:
+            command: turn_off
+    - conditions:
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: device_tracker.sm_g781b
+          state: home
+      - condition: state
+        entity_id: binary_sensor.sm_g781b_high_accuracy_mode
+        state: 'off'
+      sequence:
+      - action: notify.mobile_app_sm_g781b
+        data:
+          message: command_high_accuracy_mode
+          data:
+            command: turn_on
+  mode: single

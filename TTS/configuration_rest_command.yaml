@@ -1,0 +1,24 @@
+rest_command:
+  tagesschau:
+    url: https://www.tagesschau.de/api2u/homepage/
+    method: GET
+#tagesschau
+
+
+# thingino tts (74)
+# thingino tts (74)
+  thingino_tts:
+    url: "http://192.168.0.48:8123/api/tts_get_url"
+    method: POST
+    headers:
+      Authorization: !secret thingino_74_tts
+      Content-Type: "application/json"
+    payload: >
+      {
+        "engine_id": "tts.piper",
+        "message": "{{ message }}",
+        "options": {
+          "voice": "{{ voice | default('de_DE-pavoque-low') }}",
+          "preferred_format": "mp3"
+        }
+      }
