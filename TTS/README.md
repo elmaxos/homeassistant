@@ -40,6 +40,12 @@ Eingestellt (bewusst kurz): Gong 2, Klingel/Alarm/Hinweis 1,5, Music Trap 8, Fox
 Sprachdauer wird geschätzt: Zeichen / 13 + 2 s (die Kamera meldet kein Ende der Wiedergabe).
 Alternative ohne Schätzung: `play -A '<url>'` hängt an die Warteschlange an, statt sie zu leeren.
 
+## Handy: keine verspätete Ansage-Flut
+
+Die Handy-Ansage wird mit `ttl: 0` und `priority: high` gesendet: Google (FCM) stellt sie sofort zu oder verwirft sie.
+Ohne das speichert FCM Nachrichten, wenn das Handy im Schlafmodus oder offline ist, und liefert später alle auf einmal aus.
+Stoppen einer laufenden Handy-Ansage: `message: command_stop_tts` an `notify.mobile_app_sm_g781b`.
+
 ## Bedienhinweis
 
 „Licht einschalten“ hat Standard *an*; HA zeigt bei Ja/Nein-Feldern mit Standard *an* kein Häkchen.

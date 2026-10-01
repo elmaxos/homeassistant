@@ -10,6 +10,7 @@ Der Knopf ruft `script.ansage_senden`, das die Eingaben an `script.tts_cam_sound
 |---|---|
 | `dashboard_ansage.json` | Dashboard-Konfiguration (Abschnitte-Ansicht, nur Standard-Karten) |
 | `ansage_senden.yaml` | Skript für `scripts.yaml` (Label -> Stimmen-ID / Sound-Key, Ziele aus den Schaltern) |
+| `ansage_stoppen.yaml` | Stopp-Knopf: bricht laufende und wartende Läufe von `ansage_senden` und `tts_cam_sound_text` ab (auch von Automationen gestartete), drückt „Stop Sound“ auf beiden Kameras, schaltet deren Weißlicht aus und sendet `command_stop_tts` ans Handy |
 
 Helfer (in HA unter *Einstellungen -> Geräte & Dienste -> Helfer* angelegt):
 

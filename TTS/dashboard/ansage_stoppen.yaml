@@ -1,0 +1,28 @@
+ansage_stoppen:
+  alias: Ansage stoppen
+  description: Bricht laufende und wartende Ansagen ab, stoppt den Ton auf allen Kameras und die Sprachausgabe auf dem Handy
+  icon: mdi:stop-circle
+  sequence:
+  - action: script.turn_off
+    target:
+      entity_id:
+      - script.ansage_senden
+      - script.tts_cam_sound_text
+  - parallel:
+    - action: button.press
+      target:
+        entity_id:
+        - button.ing_sonoff_pt2_3684_stop_sound
+        - button.ing_sonoff_pt2_4420_stop_sound
+    - action: switch.turn_off
+      target:
+        entity_id:
+        - switch.ing_sonoff_pt2_3684_white_light
+        - switch.ing_sonoff_pt2_4420_white_light
+    - action: notify.mobile_app_sm_g781b
+      data:
+        message: command_stop_tts
+        data:
+          ttl: 0
+          priority: high
+  mode: single

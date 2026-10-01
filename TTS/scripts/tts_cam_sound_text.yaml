@@ -215,6 +215,8 @@ tts_cam_sound_text:
           data:
             tts_text: '{{ text }}'
             media_stream: media_alarm
+            ttl: 0
+            priority: high
     - repeat:
         for_each: '{{ cams }}'
         sequence:
