@@ -26,7 +26,7 @@
             },
             {
               "type": "button",
-              "name": "Ansage abspielen",
+              "name": "Abspielen",
               "icon": "mdi:bullhorn",
               "show_state": false,
               "tap_action": {
@@ -34,7 +34,21 @@
                 "perform_action": "script.ansage_senden"
               },
               "grid_options": {
-                "columns": 6,
+                "columns": 4,
+                "rows": 2
+              }
+            },
+            {
+              "type": "button",
+              "name": "Stopp",
+              "icon": "mdi:stop-circle",
+              "show_state": false,
+              "tap_action": {
+                "action": "perform-action",
+                "perform_action": "script.ansage_stoppen"
+              },
+              "grid_options": {
+                "columns": 4,
                 "rows": 2
               }
             },
@@ -54,7 +68,7 @@
                 }
               },
               "grid_options": {
-                "columns": 6,
+                "columns": 4,
                 "rows": 2
               }
             }
