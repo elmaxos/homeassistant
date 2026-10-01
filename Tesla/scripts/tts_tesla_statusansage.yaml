@@ -1,4 +1,4 @@
-tesla_statusansage:
+tts_tesla_statusansage:
   alias: tts_tesla_statusansage
   description: Baut einen Statustext zum Tesla und gibt ihn per tts_cam_sound_text
     aus

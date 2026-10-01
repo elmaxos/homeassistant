@@ -4,6 +4,8 @@ Es gibt nur noch ein Ansage-Skript: `tts_cam_sound_text`. Ziele sind die Kameras
 Die Automationen rufen es mit `kameras: [wohnzimmer, handy]` auf. Der frühere Verteiler `tts_an_alle_geraete` wurde entfernt.
 Alte Varianten (`tts_kamera_3684`, `tts_kamera`, `tts_cam_sound`, `gong`, `thingino_tts_ansage` und die Test-Skripte) wurden am 29.09.2026 entfernt.
 
+**Namensregel:** Alle Skripte rund um Sprachausgabe heißen `tts_...` (ID und Anzeigename).
+
 Sprachausgabe: Piper (HA-Add-on, Engine `tts.piper`) erzeugt eine MP3 -> `rest_command.thingino_tts`
 holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ordner `Thingino/`).
 

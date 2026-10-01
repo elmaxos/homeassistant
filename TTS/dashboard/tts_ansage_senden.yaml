@@ -1,5 +1,5 @@
-ansage_senden:
-  alias: Ansage senden (Dashboard)
+tts_ansage_senden:
+  alias: tts_ansage_senden
   description: Liest die Eingaben vom Dashboard "Ansage" und spielt sie über script.tts_cam_sound_text ab
   icon: mdi:bullhorn
   sequence:

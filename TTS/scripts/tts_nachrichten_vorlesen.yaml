@@ -1,0 +1,15 @@
+tts_nachrichten_vorlesen:
+  alias: tts_nachrichten_vorlesen
+  sequence:
+  - action: rest_command.tagesschau
+    response_variable: api
+  - action: script.tts_cam_sound_text
+    data:
+      kameras:
+      - wohnzimmer
+      - handy
+      message: "Hier sind die aktuellen Nachrichten. {%- for m in api.content.news
+        | selectattr('firstSentence', 'defined')\n  | rejectattr('firstSentence',
+        'equalto', '') | list\n  | list %}\n{%- if loop.index <= 3 %} {{ m.title }}.
+        {{ m.firstSentence }} {%- endif %} {%- endfor %}"
+  mode: single

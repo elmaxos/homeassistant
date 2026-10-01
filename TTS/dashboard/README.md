@@ -2,15 +2,15 @@
 
 Dashboard in der Seitenleiste (`/dashboard-ansage`): Text eingeben, Ziele wählen (Wohnzimmer 3684,
 SONOFF PT2 4 / 4420, Handy), Stimme und Sound wählen, Optionen setzen, „Ansage abspielen“ drücken.
-Der Knopf ruft `script.ansage_senden`, das die Eingaben an `script.tts_cam_sound_text` weitergibt.
+Der Knopf ruft `script.tts_ansage_senden`, das die Eingaben an `script.tts_cam_sound_text` weitergibt.
 
 ## Bestandteile
 
 | Datei | Inhalt |
 |---|---|
 | `dashboard_ansage.json` | Dashboard-Konfiguration (Abschnitte-Ansicht, nur Standard-Karten) |
-| `ansage_senden.yaml` | Skript für `scripts.yaml` (Label -> Stimmen-ID / Sound-Key, Ziele aus den Schaltern) |
-| `ansage_stoppen.yaml` | Stopp-Knopf: bricht laufende und wartende Läufe von `ansage_senden` und `tts_cam_sound_text` ab (auch von Automationen gestartete), drückt „Stop Sound“ auf beiden Kameras, schaltet deren Weißlicht aus und sendet `command_stop_tts` ans Handy |
+| `tts_ansage_senden.yaml` | Skript für `scripts.yaml` (Label -> Stimmen-ID / Sound-Key, Ziele aus den Schaltern) |
+| `tts_ansage_stoppen.yaml` | Stopp-Knopf: bricht laufende und wartende Läufe von `tts_ansage_senden` und `tts_cam_sound_text` ab (auch von Automationen gestartete), drückt „Stop Sound“ auf beiden Kameras, schaltet deren Weißlicht aus und sendet `command_stop_tts` ans Handy |
 
 Helfer (in HA unter *Einstellungen -> Geräte & Dienste -> Helfer* angelegt):
 
@@ -25,9 +25,9 @@ Helfer (in HA unter *Einstellungen -> Geräte & Dienste -> Helfer* angelegt):
 ## Neu aufbauen
 
 1. Helfer mit genau diesen Namen anlegen („Ansage Text“, „Ansage Stimme“ usw.), die Entity-IDs ergeben sich daraus.
-   Die Optionstexte der Auswahlen müssen exakt den Schlüsseln in `ansage_senden.yaml` entsprechen.
-2. `ansage_senden.yaml` an `scripts.yaml` anhängen, Skripte neu laden.
+   Die Optionstexte der Auswahlen müssen exakt den Schlüsseln in `tts_ansage_senden.yaml` entsprechen.
+2. `tts_ansage_senden.yaml` an `scripts.yaml` anhängen, Skripte neu laden.
 3. Neues Dashboard „Ansage“ anlegen, *Bearbeiten -> drei Punkte -> Rohkonfiguration*, Inhalt von
    `dashboard_ansage.json` einfügen (JSON wird als YAML akzeptiert).
 
-Neue Stimme oder neuer Sound: Option im Helfer ergänzen und die Zuordnung in `ansage_senden.yaml` nachziehen.
+Neue Stimme oder neuer Sound: Option im Helfer ergänzen und die Zuordnung in `tts_ansage_senden.yaml` nachziehen.

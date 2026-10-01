@@ -31,7 +31,7 @@
               "show_state": false,
               "tap_action": {
                 "action": "perform-action",
-                "perform_action": "script.ansage_senden"
+                "perform_action": "script.tts_ansage_senden"
               },
               "grid_options": {
                 "columns": 4,
@@ -45,7 +45,7 @@
               "show_state": false,
               "tap_action": {
                 "action": "perform-action",
-                "perform_action": "script.ansage_stoppen"
+                "perform_action": "script.tts_ansage_stoppen"
               },
               "grid_options": {
                 "columns": 4,

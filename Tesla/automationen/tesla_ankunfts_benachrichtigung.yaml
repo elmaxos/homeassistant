@@ -1,0 +1,90 @@
+- id: '1788256485488'
+  alias: Tesla Ankunfts-Benachrichtigung
+  description: Ansage, wenn ein Navigationsziel weniger als 10 Minuten entfernt ist (jedes Ziel), bei Losfahrt
+    Richtung Zuhause, und ohne Navigation 1 km vor Zuhause
+  triggers:
+  - trigger: template
+    value_template: >-
+      {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
+      {% if eta in ['unknown', 'unavailable', 'none', ''] %}false{% else %}
+      {% set m = (as_timestamp(eta) - now().timestamp()) / 60 %}{{ m < 10 and m > -1 }}{% endif %}
+    id: ziel_unter_10
+  - trigger: state
+    entity_id: device_tracker.fky_route
+    to: home
+    id: losfahrt
+  - trigger: time_pattern
+    minutes: /1
+    id: ohne_navi
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: ziel_unter_10
+      sequence:
+      - action: script.tts_cam_sound_text
+        data:
+          kameras:
+          - wohnzimmer
+          - handy
+          message: >-
+            {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
+            {% set ziel = states('sensor.fky_ziel') %}
+            {% set ziel_txt = ziel if ziel not in ['unknown', 'unavailable', 'none', ''] else 'sein Ziel' %}
+            {% set km = states('sensor.fky_entfernung_bis_zur_ankunft') %}
+            {% set min = ((as_timestamp(eta) - now().timestamp()) / 60) | round(0) | int %}
+            Das Auto erreicht {{ ziel_txt }} voraussichtlich um {{ as_timestamp(eta) | timestamp_custom('%H:%M', true) }} Uhr{% if min > 0 %}, in {{ min }} {{ 'Minute' if min == 1 else 'Minuten' }}{% endif %}.
+            {% if km not in ['unknown', 'unavailable', 'none', ''] %}Bis dorthin sind es noch {{ (km | float(0) | round(1) | string) | replace('.', ',') }} Kilometer.{% endif %}
+      - if:
+        - condition: state
+          entity_id: device_tracker.fky_route
+          state: home
+        then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.tesla_ankunft_benachrichtigt
+    - conditions:
+      - condition: trigger
+        id: losfahrt
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: device_tracker.fky_standort
+          state: home
+      sequence:
+      - action: script.tts_cam_sound_text
+        data:
+          kameras:
+          - wohnzimmer
+          - handy
+          message: >-
+            {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
+            {% if eta not in ['unknown', 'unavailable', 'none', ''] %}Das Auto fährt nach Hause und kommt voraussichtlich um
+            {{ as_timestamp(eta) | timestamp_custom('%H:%M', true) }} Uhr an.{% else %}Das Auto fährt nach Hause.{% endif %}
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.tesla_ankunft_benachrichtigt
+    - conditions:
+      - condition: trigger
+        id: ohne_navi
+      - condition: state
+        entity_id: input_boolean.tesla_ankunft_benachrichtigt
+        state: 'off'
+      - condition: template
+        value_template: >-
+          {{ states('sensor.fky_zeit_bis_zur_ankunft') in ['unknown', 'unavailable', 'none', '']
+             and states('number.entfernung_tesla_nach_hause') | float(999) <= 1 }}
+      sequence:
+      - action: script.tts_cam_sound_text
+        data:
+          kameras:
+          - wohnzimmer
+          - handy
+          message: >-
+            Das Auto ist noch {{ (states('number.entfernung_tesla_nach_hause') | float(0) | round(1) | string) | replace('.', ',') }} Kilometer von zuhause entfernt.
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.tesla_ankunft_benachrichtigt
+  mode: queued
+  max: 3

@@ -1,0 +1,16 @@
+- id: '1790894300149'
+  alias: Tesla Fast-Polling Schnellladen
+  description: Pollt alle 15 Sekunden, solange das Auto mit mehr als 15 kW lädt (Schnelllader).
+  triggers:
+  - trigger: time_pattern
+    seconds: /15
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.fky_ladegerat_leistung
+    above: 15
+  actions:
+  - action: homeassistant.update_entity
+    target:
+      entity_id: sensor.fky_ladegerat_leistung
+  mode: single
+  max_exceeded: silent

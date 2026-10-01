@@ -1,0 +1,17 @@
+- id: '1788256498172'
+  alias: Tesla Ankunfts-Benachrichtigung Reset
+  description: Setzt die Benachrichtigungssperre zurück, wenn das Auto sich wieder
+    entfernt
+  triggers:
+  - trigger: numeric_state
+    entity_id: number.entfernung_tesla_nach_hause
+    above: 3
+  conditions:
+  - condition: state
+    entity_id: input_boolean.tesla_ankunft_benachrichtigt
+    state: 'on'
+  actions:
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.tesla_ankunft_benachrichtigt
+  mode: single

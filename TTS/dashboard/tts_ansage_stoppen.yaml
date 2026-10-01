@@ -1,12 +1,12 @@
-ansage_stoppen:
-  alias: Ansage stoppen
+tts_ansage_stoppen:
+  alias: tts_ansage_stoppen
   description: Bricht laufende und wartende Ansagen ab, stoppt den Ton auf allen Kameras und die Sprachausgabe auf dem Handy
   icon: mdi:stop-circle
   sequence:
   - action: script.turn_off
     target:
       entity_id:
-      - script.ansage_senden
+      - script.tts_ansage_senden
       - script.tts_cam_sound_text
   - parallel:
     - action: button.press
