@@ -1,6 +1,6 @@
 - id: '1788256485488'
   alias: Tesla Ankunfts-Benachrichtigung
-  description: Ansage, wenn ein Navigationsziel weniger als 10 Minuten entfernt ist (jedes Ziel), bei Losfahrt
+  description: Ansage, wenn ein Navigationsziel weniger als 10 Minuten entfernt ist (jedes Ziel; Name aus der HA-Zone der Route, sonst Navi-Ziel), bei Losfahrt
     Richtung Zuhause, und ohne Navigation 1 km vor Zuhause
   triggers:
   - trigger: template
@@ -30,12 +30,17 @@
           - handy
           message: >-
             {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
+            {% set leer = ['unknown', 'unavailable', 'none', '', 'not_home'] %}
+            {% set route = states('device_tracker.fky_route') %}
             {% set ziel = states('sensor.fky_ziel') %}
-            {% set ziel_txt = ziel if ziel not in ['unknown', 'unavailable', 'none', ''] else 'sein Ziel' %}
             {% set km = states('sensor.fky_entfernung_bis_zur_ankunft') %}
+            {% set um = as_timestamp(eta) | timestamp_custom('%H:%M', true) %}
             {% set min = ((as_timestamp(eta) - now().timestamp()) / 60) | round(0) | int %}
-            Das Auto erreicht {{ ziel_txt }} voraussichtlich um {{ as_timestamp(eta) | timestamp_custom('%H:%M', true) }} Uhr{% if min > 0 %}, in {{ min }} {{ 'Minute' if min == 1 else 'Minuten' }}{% endif %}.
-            {% if km not in ['unknown', 'unavailable', 'none', ''] %}Bis dorthin sind es noch {{ (km | float(0) | round(1) | string) | replace('.', ',') }} Kilometer.{% endif %}
+            {% set in_min = (', in ' ~ min ~ (' Minute' if min == 1 else ' Minuten')) if min > 0 else '' %}
+            {% if route == 'home' %}Das Auto ist voraussichtlich um {{ um }} Uhr zuhause{{ in_min }}.
+            {% else %}{% set name = route if route not in leer else (ziel if ziel not in leer else 'sein Ziel') %}Das Auto erreicht {{ name }} voraussichtlich um {{ um }} Uhr{{ in_min }}.
+            {% endif %}
+            {% if km not in leer %}Bis dorthin sind es noch {{ (km | float(0) | round(1) | string) | replace('.', ',') }} Kilometer.{% endif %}
       - if:
         - condition: state
           entity_id: device_tracker.fky_route

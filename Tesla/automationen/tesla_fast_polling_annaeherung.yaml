@@ -1,19 +1,16 @@
 - id: '1788195823490'
   alias: Tesla Fast-Polling bei Annäherung
   description: 'Schnelleres Polling bei aktiver Navigation: Ziel 15-30 min entfernt jede Minute, unter 15 min und
-    3 min nach Ankunft alle 30 s. Dazu täglich 13 Uhr mit Aufwecken.'
+    3 min nach Ankunft alle 30 s.'
   triggers:
   - trigger: time_pattern
     seconds: /30
     id: takt
-  - trigger: time
-    at: '13:00:00'
-    id: taeglich
   conditions:
   - condition: template
     value_template: >-
       {% set quelle = trigger.id | default('manuell') %}
-      {% if quelle in ['taeglich', 'manuell'] %}true{% else %}
+      {% if quelle == 'manuell' %}true{% else %}
       {% set s = states.sensor.fky_zeit_bis_zur_ankunft %}
       {% if s is none %}false
       {% elif s.state in ['unknown', 'unavailable', 'none', ''] %}{{ (now() - s.last_changed).total_seconds() < 180 }}
@@ -21,22 +18,6 @@
       {% if m <= 15 %}true{% elif m <= 30 %}{{ now().second < 15 }}{% else %}false{% endif %}
       {% endif %}{% endif %}
   actions:
-  - if:
-    - condition: template
-      value_template: '{{ trigger.id | default(''manuell'') in [''taeglich'', ''manuell''] }}'
-    - condition: state
-      entity_id: binary_sensor.fky_status
-      state:
-      - 'off'
-      - unknown
-      - unavailable
-    then:
-    - action: button.press
-      target:
-        entity_id: button.fky_wecken
-    - wait_template: '{{ is_state(''binary_sensor.fky_status'', ''on'') }}'
-      timeout: 00:00:30
-      continue_on_timeout: true
   - action: homeassistant.update_entity
     target:
       entity_id:
