@@ -1,0 +1,55 @@
+ansage_senden:
+  alias: Ansage senden (Dashboard)
+  description: Liest die Eingaben vom Dashboard "Ansage" und spielt sie über script.tts_cam_sound_text ab
+  icon: mdi:bullhorn
+  sequence:
+  - variables:
+      stimmen:
+        Thorsten LOW: de_DE-thorsten-low
+        Thorsten MEDIUM: de_DE-thorsten-medium
+        Thorsten HIGH: de_DE-thorsten-high
+        Thorsten emotional MEDIUM: de_DE-thorsten_emotional-medium
+        Eva LOW: de_DE-eva_k-x_low
+        Karlsson LOW: de_DE-karlsson-low
+        Kerstin LOW: de_DE-kerstin-low
+        Ramona LOW: de_DE-ramona-low
+        Pavoque LOW: de_DE-pavoque-low
+        mls MEDIUM: de_DE-mls-medium
+        US Lessac MEDIUM: en_US-lessac-medium
+      sounds:
+        Gong (Cam): chime
+        Kein Sound: keiner
+        Klingel: bell
+        Alarm: alarm
+        Hinweis: notification
+        Music Trap: music_trap
+        21st Century Fox: 21st_century_fox
+        12 Uhr: 12uhr
+      ziele: >-
+        {% set ns = namespace(l=[]) %}
+        {% if is_state('input_boolean.ansage_wohnzimmer', 'on') %}{% set ns.l = ns.l + ['wohnzimmer'] %}{% endif %}
+        {% if is_state('input_boolean.ansage_kamera4420', 'on') %}{% set ns.l = ns.l + ['kamera4420'] %}{% endif %}
+        {% if is_state('input_boolean.ansage_handy', 'on') %}{% set ns.l = ns.l + ['handy'] %}{% endif %}
+        {{ ns.l }}
+      text: "{{ states('input_text.ansage_text') if states('input_text.ansage_text') not in ['unknown', 'unavailable'] else '' }}"
+  - if:
+    - condition: template
+      value_template: "{{ ziele | count == 0 }}"
+    then:
+    - action: persistent_notification.create
+      data:
+        title: Ansage
+        message: Kein Ziel ausgewählt (Wohnzimmer, Kamera 4420 oder Handy).
+        notification_id: ansage_senden
+    - stop: Kein Ziel ausgewählt
+  - action: script.tts_cam_sound_text
+    data:
+      message: "{{ text }}"
+      kameras: "{{ ziele }}"
+      voice: "{{ stimmen.get(states('input_select.ansage_stimme'), 'de_DE-thorsten-low') }}"
+      sound: "{{ sounds.get(states('input_select.ansage_sound'), 'chime') }}"
+      zweimal: "{{ is_state('input_boolean.ansage_zweimal', 'on') }}"
+      warten: "{{ is_state('input_boolean.ansage_warten', 'on') }}"
+      licht: "{{ is_state('input_boolean.ansage_licht', 'on') }}"
+  mode: queued
+  max: 5

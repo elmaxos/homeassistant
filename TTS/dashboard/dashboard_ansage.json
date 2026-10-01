@@ -1,0 +1,139 @@
+{
+  "views": [
+    {
+      "title": "Ansage",
+      "path": "ansage",
+      "icon": "mdi:bullhorn",
+      "type": "sections",
+      "max_columns": 2,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Was soll gesagt werden?",
+              "icon": "mdi:text"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "input_text.ansage_text",
+                  "name": "Text (max. 255 Zeichen)"
+                }
+              ]
+            },
+            {
+              "type": "button",
+              "name": "Ansage abspielen",
+              "icon": "mdi:bullhorn",
+              "show_state": false,
+              "tap_action": {
+                "action": "perform-action",
+                "perform_action": "script.ansage_senden"
+              },
+              "grid_options": {
+                "columns": 6,
+                "rows": 2
+              }
+            },
+            {
+              "type": "button",
+              "name": "Text leeren",
+              "icon": "mdi:eraser",
+              "show_state": false,
+              "tap_action": {
+                "action": "perform-action",
+                "perform_action": "input_text.set_value",
+                "target": {
+                  "entity_id": "input_text.ansage_text"
+                },
+                "data": {
+                  "value": ""
+                }
+              },
+              "grid_options": {
+                "columns": 6,
+                "rows": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Wo?",
+              "icon": "mdi:speaker-multiple"
+            },
+            {
+              "type": "tile",
+              "entity": "input_boolean.ansage_wohnzimmer",
+              "name": "Wohnzimmer (3684)",
+              "tap_action": {
+                "action": "toggle"
+              },
+              "icon_tap_action": {
+                "action": "toggle"
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "input_boolean.ansage_kamera4420",
+              "name": "SONOFF PT2 4 (4420)",
+              "tap_action": {
+                "action": "toggle"
+              },
+              "icon_tap_action": {
+                "action": "toggle"
+              }
+            },
+            {
+              "type": "tile",
+              "entity": "input_boolean.ansage_handy",
+              "name": "Handy Max (nur Text)",
+              "tap_action": {
+                "action": "toggle"
+              },
+              "icon_tap_action": {
+                "action": "toggle"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "Wie?",
+              "icon": "mdi:tune"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "input_select.ansage_stimme",
+                  "name": "Stimme"
+                },
+                {
+                  "entity": "input_select.ansage_sound",
+                  "name": "Sound davor"
+                },
+                {
+                  "entity": "input_boolean.ansage_zweimal",
+                  "name": "Zweimal abspielen"
+                },
+                {
+                  "entity": "input_boolean.ansage_licht",
+                  "name": "Licht an der Kamera"
+                },
+                {
+                  "entity": "input_boolean.ansage_warten",
+                  "name": "Auf Anwesenheit warten"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
