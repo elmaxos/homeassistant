@@ -48,7 +48,7 @@
       sequence:
       - variables:
           route: "{{ states('device_tracker.fky_route') }}"
-          ziel: "{{ states('sensor.fky_ziel') | regex_replace(',\s*(Germany|Deutschland)$', '') }}"
+          ziel: "{{ states('sensor.fky_ziel') | regex_replace(', *(Germany|Deutschland)$', '') }}"
           name: "{{ 'zuhause' if route == 'home' else (route if route not in leer else ziel) }}"
       - action: input_text.set_value
         target:
@@ -91,7 +91,7 @@
           message: >-
             {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
             {% set route = states('device_tracker.fky_route') %}
-            {% set ziel = states('sensor.fky_ziel') | regex_replace(',\s*(Germany|Deutschland)$', '') %}
+            {% set ziel = states('sensor.fky_ziel') | regex_replace(', *(Germany|Deutschland)$', '') %}
             {% set km = states('sensor.fky_entfernung_bis_zur_ankunft') %}
             {% set um = as_timestamp(eta) | timestamp_custom('%H:%M', true) %}
             {% set min = ((as_timestamp(eta) - now().timestamp()) / 60) | round(0) | int %}
