@@ -21,6 +21,9 @@ tts_tesla_statusansage:
   - action: script.tesla_poll_jetzt_test
     metadata: {}
     data: {}
+  - action: script.tesla_standort_adresse
+    response_variable: standort_info
+    continue_on_error: true
   - variables:
       tueren:
         binary_sensor.fky_fahrertur_vorne: die Fahrertür vorne
@@ -90,7 +93,7 @@ tts_tesla_statusansage:
         {%- set zuhause = is_state(''device_tracker.fky_standort'', ''home'') or entfernung
         < 0.2 -%}
 
-        {%- set ziel = states(''sensor.fky_ziel'') -%}
+        {%- set ziel = states(''sensor.fky_ziel'') | regex_replace('',\s*(Germany|Deutschland)$'', '''') -%}
 
         {%- set hat_ziel = ziel not in [''unknown'', ''unavailable'', ''none'', '''']
         -%}
@@ -110,7 +113,7 @@ tts_tesla_statusansage:
 
         {%- else -%}
 
-        Das Auto ist {{ num(entfernung, 1) }} Kilometer Luftlinie von zuhause entfernt
+        Das Auto ist {{ num(entfernung, 1) }} Kilometer Luftlinie von zuhause entfernt{%- if standort_info is defined and standort_info.zone %}, in der Zone {{ standort_info.zone }}{%- elif standort_info is defined and standort_info.adresse %}, in der Nähe von {{ standort_info.adresse }}{%- endif -%}
 
         {%- if hat_ziel %} und unterwegs nach {{ ziel }}{% endif -%}.
 

@@ -1,8 +1,16 @@
 - id: '1788256485488'
   alias: Tesla Ankunfts-Benachrichtigung
-  description: Ansage, wenn ein Navigationsziel weniger als 10 Minuten entfernt ist (jedes Ziel; Name aus der HA-Zone der Route, sonst Navi-Ziel), bei Losfahrt
-    Richtung Zuhause, und ohne Navigation 1 km vor Zuhause
+  description: 'Ansagen zur Navigation: neues Ziel, Ziel weniger als 10 Minuten entfernt, angekommen. Zielname
+    aus der HA-Zone der Route, sonst Navi-Ziel. Ohne Navigation: Ansage 1 km vor Zuhause.'
   triggers:
+  - trigger: state
+    entity_id: sensor.fky_ziel
+    not_to:
+    - unknown
+    - unavailable
+    for:
+      seconds: 3
+    id: neues_ziel
   - trigger: template
     value_template: >-
       {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
@@ -10,15 +18,67 @@
       {% set m = (as_timestamp(eta) - now().timestamp()) / 60 %}{{ m < 10 and m > -1 }}{% endif %}
     id: ziel_unter_10
   - trigger: state
-    entity_id: device_tracker.fky_route
-    to: home
-    id: losfahrt
+    entity_id: sensor.fky_zeit_bis_zur_ankunft
+    to:
+    - unknown
+    - unavailable
+    for:
+      seconds: 3
+    id: angekommen
   - trigger: time_pattern
     minutes: /1
     id: ohne_navi
   conditions: []
+  variables:
+    leer:
+    - unknown
+    - unavailable
+    - none
+    - ''
+    - not_home
   actions:
   - choose:
+    - conditions:
+      - condition: trigger
+        id: neues_ziel
+      - condition: template
+        value_template: >-
+          {{ trigger.from_state is not none and trigger.from_state.state != 'unavailable'
+             and trigger.from_state.state != trigger.to_state.state }}
+      sequence:
+      - variables:
+          route: "{{ states('device_tracker.fky_route') }}"
+          ziel: "{{ states('sensor.fky_ziel') | regex_replace(',\s*(Germany|Deutschland)$', '') }}"
+          name: "{{ 'zuhause' if route == 'home' else (route if route not in leer else ziel) }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.tesla_letztes_ziel
+        data:
+          value: '{{ name[:255] }}'
+      - if:
+        - condition: template
+          value_template: "{{ route == 'home' and is_state('device_tracker.fky_standort', 'home') }}"
+        then:
+        - stop: Ziel zuhause, Auto steht schon zuhause
+      - action: script.tts_cam_sound_text
+        data:
+          kameras:
+          - wohnzimmer
+          - handy
+          message: >-
+            {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
+            {% set km = states('sensor.fky_entfernung_bis_zur_ankunft') %}
+            {% if route == 'home' %}Das Auto fährt nach Hause.{% else %}Das Auto hat ein neues Ziel: {{ name }}.{% endif %}
+            {% if eta not in leer %}{% set min = ((as_timestamp(eta) - now().timestamp()) / 60) | round(0) | int %}
+            Ankunft voraussichtlich um {{ as_timestamp(eta) | timestamp_custom('%H:%M', true) }} Uhr{% if min > 0 %}, in {{ min }} {{ 'Minute' if min == 1 else 'Minuten' }}{% endif %}.{% endif %}
+            {% if km not in leer %}Die Strecke ist noch {{ (km | float(0) | round(1) | string) | replace('.', ',') }} Kilometer lang.{% endif %}
+      - if:
+        - condition: template
+          value_template: "{{ route == 'home' }}"
+        then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.tesla_ankunft_benachrichtigt
     - conditions:
       - condition: trigger
         id: ziel_unter_10
@@ -30,9 +90,8 @@
           - handy
           message: >-
             {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
-            {% set leer = ['unknown', 'unavailable', 'none', '', 'not_home'] %}
             {% set route = states('device_tracker.fky_route') %}
-            {% set ziel = states('sensor.fky_ziel') %}
+            {% set ziel = states('sensor.fky_ziel') | regex_replace(',\s*(Germany|Deutschland)$', '') %}
             {% set km = states('sensor.fky_entfernung_bis_zur_ankunft') %}
             {% set um = as_timestamp(eta) | timestamp_custom('%H:%M', true) %}
             {% set min = ((as_timestamp(eta) - now().timestamp()) / 60) | round(0) | int %}
@@ -51,12 +110,11 @@
             entity_id: input_boolean.tesla_ankunft_benachrichtigt
     - conditions:
       - condition: trigger
-        id: losfahrt
-      - condition: not
-        conditions:
-        - condition: state
-          entity_id: device_tracker.fky_standort
-          state: home
+        id: angekommen
+      - condition: template
+        value_template: >-
+          {% set f = trigger.from_state.state if trigger.from_state is not none else 'unknown' %}
+          {% if f in leer %}false{% else %}{{ (as_timestamp(f, 0) - now().timestamp()) < 300 }}{% endif %}
       sequence:
       - action: script.tts_cam_sound_text
         data:
@@ -64,10 +122,13 @@
           - wohnzimmer
           - handy
           message: >-
-            {% set eta = states('sensor.fky_zeit_bis_zur_ankunft') %}
-            {% if eta not in ['unknown', 'unavailable', 'none', ''] %}Das Auto fährt nach Hause und kommt voraussichtlich um
-            {{ as_timestamp(eta) | timestamp_custom('%H:%M', true) }} Uhr an.{% else %}Das Auto fährt nach Hause.{% endif %}
-      - action: input_boolean.turn_off
+            {% set ort = states('device_tracker.fky_standort') %}
+            {% set letztes = states('input_text.tesla_letztes_ziel') %}
+            {% if ort == 'home' %}Das Auto ist zuhause angekommen.
+            {% elif ort not in leer %}Das Auto ist angekommen: {{ ort }}.
+            {% elif letztes not in leer and letztes != 'zuhause' %}Das Auto ist angekommen: {{ letztes }}.
+            {% else %}Das Auto ist am Ziel angekommen.{% endif %}
+      - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.tesla_ankunft_benachrichtigt
     - conditions:
@@ -78,7 +139,7 @@
         state: 'off'
       - condition: template
         value_template: >-
-          {{ states('sensor.fky_zeit_bis_zur_ankunft') in ['unknown', 'unavailable', 'none', '']
+          {{ states('sensor.fky_zeit_bis_zur_ankunft') in leer
              and states('number.entfernung_tesla_nach_hause') | float(999) <= 1 }}
       sequence:
       - action: script.tts_cam_sound_text
@@ -92,4 +153,4 @@
         target:
           entity_id: input_boolean.tesla_ankunft_benachrichtigt
   mode: queued
-  max: 3
+  max: 5

@@ -1,0 +1,37 @@
+tesla_standort_adresse:
+  alias: tesla_standort_adresse
+  description: Liefert {zone, adresse} zum Standort des Autos. In einer HA-Zone nur den Zonennamen, sonst die Adresse
+    per OpenStreetMap (rest_command.nominatim_reverse).
+  sequence:
+  - variables:
+      ort: "{{ states('device_tracker.fky_standort') }}"
+      lat: "{{ state_attr('device_tracker.fky_standort', 'latitude') }}"
+      lon: "{{ state_attr('device_tracker.fky_standort', 'longitude') }}"
+  - if:
+    - condition: template
+      value_template: "{{ ort not in ['not_home', 'unknown', 'unavailable', ''] or lat is none or lon is none }}"
+    then:
+    - variables:
+        ergebnis: "{{ {'zone': ort if ort not in ['not_home', 'unknown', 'unavailable', ''] else '', 'adresse': ''} }}"
+    - stop: Auto in einer Zone oder ohne Koordinaten
+      response_variable: ergebnis
+  - action: rest_command.nominatim_reverse
+    data:
+      lat: '{{ lat }}'
+      lon: '{{ lon }}'
+    response_variable: geo
+    continue_on_error: true
+  - variables:
+      ergebnis: >-
+        {% set ns = namespace(a='') %}
+        {% if geo is defined and geo.status == 200 and geo.content is mapping and geo.content.address is defined %}
+          {% set ad = geo.content.address %}
+          {% set strasse = ad.road | default('') %}
+          {% if strasse and ad.house_number is defined %}{% set strasse = strasse ~ ' ' ~ ad.house_number %}{% endif %}
+          {% set ort2 = ad.city | default(ad.town | default(ad.village | default(ad.municipality | default('')))) %}
+          {% set ns.a = [strasse, ort2] | select | join(', ') %}
+        {% endif %}
+        {{ {'zone': '', 'adresse': ns.a} }}
+  - stop: fertig
+    response_variable: ergebnis
+  mode: parallel

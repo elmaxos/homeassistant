@@ -1,4 +1,11 @@
 rest_command:
+  # Rückwärts-Geokodierung (Koordinaten -> Adresse) über OpenStreetMap, genutzt von script.tesla_standort_adresse
+  nominatim_reverse:
+    url: "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={{ lat }}&lon={{ lon }}&zoom=18&addressdetails=1&accept-language=de"
+    method: GET
+    headers:
+      User-Agent: "HomeAssistant-elmaxos/1.0 (tesla_standort_adresse)"
+    timeout: 10
   tagesschau:
     url: https://www.tagesschau.de/api2u/homepage/
     method: GET
