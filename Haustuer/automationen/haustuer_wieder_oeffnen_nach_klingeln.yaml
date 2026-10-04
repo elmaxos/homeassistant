@@ -1,0 +1,28 @@
+- id: '1791127789460'
+  alias: Haustür wieder öffnen nach Klingeln
+  description: Öffnet den Vordereingang (Ring), wenn innerhalb von 1 Minute nach dem Schließen der Wohnungstür
+    geklingelt wird. Schickt eine Benachrichtigung ans Handy.
+  triggers:
+  - trigger: state
+    entity_id: event.vordereingang_klingeln_2
+    not_from:
+    - unknown
+    - unavailable
+  conditions:
+  - condition: template
+    value_template: "{{ trigger.to_state.attributes.event_type == 'ring' }}"
+  - condition: state
+    entity_id: binary_sensor.fl_par_wohnungstuer_contact
+    state: 'off'
+  - condition: template
+    value_template: >-
+      {{ (now() - states.binary_sensor.fl_par_wohnungstuer_contact.last_changed).total_seconds() <= 60 }}
+  actions:
+  - action: button.press
+    target:
+      entity_id: button.vordereingang_tur_offnen_2
+  - action: notify.mobile_app_sm_g781b
+    data:
+      title: Haustür
+      message: Vordereingang automatisch geöffnet (geklingelt {{ (now() - states.binary_sensor.fl_par_wohnungstuer_contact.last_changed).total_seconds() | round(0) | int }} s nach Schließen der Wohnungstür).
+  mode: single
