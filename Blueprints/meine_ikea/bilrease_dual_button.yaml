@@ -1,0 +1,101 @@
+blueprint:
+  name: IKEA Bilbut Zwei-Tasten-Schalter
+  description: >-
+    Ordnet jedem Ereignis der beiden Tasten eine eigene Aktion zu.
+    Unterstützt Einfachdruck, Doppeldruck, langes Drücken und Loslassen.
+  domain: automation
+  input:
+    taste_1:
+      name: Taste 1
+      description: Die Event-Entität der ersten Taste
+      selector:
+        entity:
+          filter:
+            domain: event
+    taste_2:
+      name: Taste 2
+      description: Die Event-Entität der zweiten Taste
+      selector:
+        entity:
+          filter:
+            domain: event
+
+    t1_einfach:
+      name: Taste 1 - einmal drücken
+      default: []
+      selector:
+        action: {}
+    t1_doppelt:
+      name: Taste 1 - zweimal drücken
+      default: []
+      selector:
+        action: {}
+    t1_lang:
+      name: Taste 1 - lang drücken
+      default: []
+      selector:
+        action: {}
+    t1_los:
+      name: Taste 1 - loslassen
+      default: []
+      selector:
+        action: {}
+
+    t2_einfach:
+      name: Taste 2 - einmal drücken
+      default: []
+      selector:
+        action: {}
+    t2_doppelt:
+      name: Taste 2 - zweimal drücken
+      default: []
+      selector:
+        action: {}
+    t2_lang:
+      name: Taste 2 - lang drücken
+      default: []
+      selector:
+        action: {}
+    t2_los:
+      name: Taste 2 - loslassen
+      default: []
+      selector:
+        action: {}
+
+mode: parallel
+max: 10
+
+triggers:
+  - trigger: state
+    entity_id: !input taste_1
+    id: taste_1
+  - trigger: state
+    entity_id: !input taste_2
+    id: taste_2
+
+conditions:
+  - condition: template
+    value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+
+actions:
+  - variables:
+      typ: "{{ trigger.to_state.attributes.event_type }}"
+      kombi: "{{ trigger.id }}__{{ typ }}"
+  - choose:
+      - conditions: "{{ kombi == 'taste_1__multi_press_1' }}"
+        sequence: !input t1_einfach
+      - conditions: "{{ kombi == 'taste_1__multi_press_2' }}"
+        sequence: !input t1_doppelt
+      - conditions: "{{ kombi == 'taste_1__long_press' }}"
+        sequence: !input t1_lang
+      - conditions: "{{ kombi == 'taste_1__long_release' }}"
+        sequence: !input t1_los
+
+      - conditions: "{{ kombi == 'taste_2__multi_press_1' }}"
+        sequence: !input t2_einfach
+      - conditions: "{{ kombi == 'taste_2__multi_press_2' }}"
+        sequence: !input t2_doppelt
+      - conditions: "{{ kombi == 'taste_2__long_press' }}"
+        sequence: !input t2_lang
+      - conditions: "{{ kombi == 'taste_2__long_release' }}"
+        sequence: !input t2_los
