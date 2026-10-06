@@ -1,0 +1,61 @@
+- id: '1775818895975'
+  alias: 'Keller auf Benachrichtigung und Alarm '
+  description: Warnt nur zwischen 08:00 und 21:00. Steht die Tuer um 08:00 schon offen,
+    startet die Warnung dann. Um 21:00 hoert eine laufende Warnung auf.
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.par_keller_contact
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    to:
+    - 'on'
+  - trigger: time
+    at: 08:00:00
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.par_keller_contact
+    state: 'on'
+  - condition: time
+    after: 08:00:00
+    before: '21:00:00'
+  actions:
+  - repeat:
+      while:
+      - condition: state
+        entity_id: binary_sensor.par_keller_contact
+        state: 'on'
+      - condition: time
+        after: 08:00:00
+        before: '21:00:00'
+      sequence:
+      - action: script.tts_cam_sound_text
+        metadata: {}
+        data:
+          kameras:
+          - wohnzimmer
+          - handy
+          message: Achtung. Achtung. Die Kellertür ist offen. ... Ich wiederhole.
+            Die Kellertür ist offen.
+      - action: switch.toggle
+        metadata: {}
+        target:
+          entity_id: switch.relay_switch_1pm
+        data: {}
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 2
+      - action: switch.toggle
+        metadata: {}
+        target:
+          entity_id: switch.relay_switch_1pm
+        data: {}
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 13
+          milliseconds: 0
+  mode: single
