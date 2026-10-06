@@ -33,6 +33,17 @@ Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-
 Neue Kamera: Eintrag mit `topic`, `licht` (Weißlicht-Switch) und optional `bewegung` ergänzen und die Option
 in allen `kameras`-Selektoren nachziehen.
 
+## Aufbau: Warten blockiert keine anderen Ansagen
+
+- `tts_cam_sound_text` (öffentlich, `mode: parallel`): einziges Skript, das Automationen aufrufen. Wartet bei
+  „Auf Anwesenheit warten“ bis zu 30 min auf den Bewegungsmelder der gewählten Kamera (nur Wohnzimmer hat einen),
+  danach übergibt es an `tts_cam_ausgabe`.
+- `tts_cam_ausgabe` (intern, `mode: queued`, max. 10): spielt Sound, Text, Licht und Handy-Ansage ab, eine nach der anderen.
+  Nicht direkt aufrufen.
+
+Vorher steckte das Warten im selben Skript wie das Abspielen. Eine wartende Ansage (z. B. „Erinnerung offene Türen
+abends“) hat dadurch bis zu 30 Minuten alle anderen Ansagen blockiert (im Verlauf 9 solche Blöcke vom 28.09. bis 04.10.).
+
 ## Pausen
 
 Nach dem Sound wartet das Skript `dauer` Sekunden, dann startet die Sprache. Weil `play` auf der Kamera

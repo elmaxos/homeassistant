@@ -8,6 +8,7 @@ tts_ansage_stoppen:
       entity_id:
       - script.tts_ansage_senden
       - script.tts_cam_sound_text
+      - script.tts_cam_ausgabe
   - parallel:
     - action: button.press
       target:

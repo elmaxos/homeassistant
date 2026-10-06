@@ -8,7 +8,7 @@ tts_cam_sound_text:
       required: false
       default: ''
       selector:
-        text:
+        text: null
     kameras:
       name: Kameras
       description: Auf welchen Kameras abgespielt werden soll
@@ -90,148 +90,43 @@ tts_cam_sound_text:
       required: false
       default: false
       selector:
-        boolean:
+        boolean: null
     warten:
       name: Auf Anwesenheit warten
       description: Wartet auf Bewegung, spätestens nach 30 Minuten wird trotzdem abgespielt
       required: false
       default: false
       selector:
-        boolean:
+        boolean: null
     licht:
       name: Licht einschalten
       description: Weißlicht der Kamera während der Ansage einschalten
       required: false
       default: true
       selector:
-        boolean:
+        boolean: null
   sequence:
   - variables:
-      geraete:
-        wohnzimmer:
-          topic: ing-sonoff-pt2-3684/cmd
-          licht: switch.ing_sonoff_pt2_3684_white_light
-          bewegung: binary_sensor.wz_myg_sofa_belegung
-        kamera4420:
-          topic: ing-sonoff-pt2-4420/cmd
-          licht: switch.ing_sonoff_pt2_4420_white_light
-      sounds:
-        chime:
-          datei: /usr/share/sounds/chime_3.opus
-          dauer: 2
-        bell:
-          datei: '''http://192.168.0.48:8123/local/sounds/bell_1.mp3'''
-          dauer: 1.5
-        alarm:
-          datei: '''http://192.168.0.48:8123/local/sounds/alarm_1.mp3'''
-          dauer: 1.5
-        notification:
-          datei: '''http://192.168.0.48:8123/local/sounds/notification_1.mp3'''
-          dauer: 1.5
-        music_trap:
-          datei: '''http://192.168.0.48:8123/local/sounds/music_trap.mp3'''
-          dauer: 8
-        21st_century_fox:
-          datei: '''http://192.168.0.48:8123/local/sounds/21st_century_fox.mp3'''
-          dauer: 22
-        12uhr:
-          datei: '''http://192.168.0.48:8123/local/sounds/12uhr.wav'''
-          dauer: 3
-      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %} {{ [k] if k is string
-        else k }}'
-      cams: '{{ auswahl | reject(''eq'', ''handy'') | list }}'
-      s_key: '{{ sound | default(''chime'') }}'
-      datei: '{{ sounds[s_key].datei if s_key in sounds else '''' }}'
-      effektive_pause: "{% if sound_pause is defined and sound_pause is not none and
-        sound_pause != '' %}\n  {{ sound_pause | float }}\n{% elif s_key in sounds
-        and 'dauer' in sounds[s_key] %}\n  {{ sounds[s_key].dauer | float }}\n{% else
-        %}\n  2.0\n{% endif %}"
-      text: '{% set t = message | default('''') | trim | replace(''"'', '''') | replace(''\n'',
-        '' '') %} {{ t }}{% if t != '''' and zweimal | default(false) %} ... Ich wiederhole.
-        {{ t }}{% endif %}'
-  - variables:
-      lichter: "{% set ns = namespace(l=[]) %} {% if licht | default(true) %}{% for
-        k in auswahl %}\n  {% if k in geraete and 'licht' in geraete[k] %}\n    {%
-        set ns.l = ns.l + [geraete[k].licht] %}\n  {% endif %}\n{% endfor %}{% endif
-        %} {{ ns.l }}"
-      bewegungsmelder: "{% set ns = namespace(m=[]) %} {% for k in auswahl %}\n  {%
-        if k in geraete and 'bewegung' in geraete[k] %}\n    {% set ns.m = ns.m +
-        [geraete[k].bewegung] %}\n  {% endif %}\n{% endfor %} {{ ns.m }}"
+      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %}{{ [k] if k is string else k }}'
+      melder:
+        wohnzimmer: binary_sensor.wz_myg_sofa_belegung
+      bewegungsmelder: '{% set ns = namespace(m=[]) %}{% for k in auswahl %}{% if k in melder %}{% set ns.m = ns.m + [melder[k]] %}{% endif %}{% endfor %}{{ ns.m }}'
   - if:
     - condition: template
-      value_template: '{{ text == '''' and datei == '''' }}'
+      value_template: '{{ (warten | default(false)) and (bewegungsmelder | length > 0) }}'
     then:
-    - stop: Weder Text noch Sound angefordert
-  - if:
-    - condition: template
-      value_template: '{{ (warten | default(false)) and (bewegungsmelder | length
-        > 0) }}'
-    then:
-    - wait_template: '{{ expand(bewegungsmelder) | selectattr(''state'', ''eq'', ''on'')
-        | list | length > 0 }}'
+    - wait_template: '{{ expand(bewegungsmelder) | selectattr(''state'', ''eq'', ''on'') | list | length > 0 }}'
       timeout:
         minutes: 30
       continue_on_timeout: true
-  - if:
-    - condition: template
-      value_template: '{{ lichter | length > 0 }}'
-    then:
-    - action: switch.turn_on
-      target:
-        entity_id: '{{ lichter }}'
-  - if:
-    - condition: template
-      value_template: '{{ datei != '''' }}'
-    then:
-    - repeat:
-        for_each: '{{ cams }}'
-        sequence:
-        - action: mqtt.publish
-          data:
-            topic: '{{ geraete[repeat.item].topic }}'
-            payload: play {{ datei }}
-    - delay:
-        seconds: '{{ effektive_pause }}'
-  - if:
-    - condition: template
-      value_template: '{{ text != '''' }}'
-    then:
-    - if:
-      - condition: template
-        value_template: '{{ cams | length > 0 }}'
-      then:
-      - action: rest_command.thingino_tts
-        data:
-          message: '{{ text }}'
-          voice: '{{ voice }}'
-        response_variable: tts_result
-    - if:
-      - condition: template
-        value_template: '{{ ''handy'' in auswahl }}'
-      then:
-      - action: notify.mobile_app_sm_g781b
-        data:
-          message: TTS
-          data:
-            tts_text: '{{ text }}'
-            media_stream: media_alarm
-            ttl: 0
-            priority: high
-    - repeat:
-        for_each: '{{ cams }}'
-        sequence:
-        - action: mqtt.publish
-          data:
-            topic: '{{ geraete[repeat.item].topic }}'
-            payload: play 'http://192.168.0.48:8123{{ tts_result.content.path }}'
-    - delay:
-        seconds: '{{ (text | length / 13) | round(0) + 2 }}'
-  - if:
-    - condition: template
-      value_template: '{{ lichter | length > 0 }}'
-    then:
-    - action: switch.turn_off
-      target:
-        entity_id: '{{ lichter }}'
-  mode: queued
-  max: 5
+  - action: script.tts_cam_ausgabe
+    data:
+      message: '{{ message | default('''') }}'
+      kameras: '{{ auswahl }}'
+      sound: '{{ sound | default(''chime'') }}'
+      voice: '{{ voice | default(''de_DE-thorsten-low'') }}'
+      sound_pause: '{{ sound_pause if sound_pause is defined and sound_pause is not none else '''' }}'
+      zweimal: '{{ zweimal | default(false) }}'
+      licht: '{{ licht | default(true) }}'
+  mode: parallel
+  max: 10
