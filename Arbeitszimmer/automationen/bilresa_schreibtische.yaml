@@ -1,0 +1,185 @@
+- id: '1777887841632'
+  alias: Bilresa Fernbedienungen (Matter) – 3 Lampen, 2 Klicker
+  description: 'Zwei Bilresa-Fernbedienungen steuern gemeinsam dieselben 3 Lampen.
+    Taste1 einfach (multi_press_1)      -> Lampe1 an/aus Taste1 Doppelklick (multi_press_2)  ->
+    Lampe3 an/aus Taste2 einfach (multi_press_1)      -> Lampe2 an/aus Wiederholter
+    Druck derselben Taste/desselben Klicktyps <2s nach dem letzten Klick (auf DERSELBEN
+    Fernbedienung) -> Farbwechsel der zuletzt aktiven Lampe statt erneutem Togglen
+    (3 feste Werte, beliebig oft weiterschaltbar solange <2s Abstand) Taste1 halten
+    (long_press..long_release) -> zuletzt aktive Lampe heller (10 % alle 0,3 s) Taste2 halten (long_press..long_release)
+    -> zuletzt aktive Lampe dunkler "Zuletzt aktive Lampe" = Lampe mit dem neuesten
+    last_changed, sofern sie an ist. Da beide Fernbedienungen dieselben Lampen steuern,
+    unterbricht ein Tastendruck auf der jeweils anderen Fernbedienung bewusst einen
+    laufenden Dimmvorgang (mode: restart) - das ist hier gewollt.
+
+    '
+  triggers:
+  - entity_id:
+    - event.bilresa_dual_button_taste_1_3
+    - event.bilresa_dual_button_taste_2_3
+    - event.bilresa_dual_button_taste_1
+    - event.bilresa_dual_button_taste_2
+    trigger: state
+  conditions: []
+  actions:
+  - variables:
+      lamps:
+      - light.kajplats_gu10_ws_575lm
+      - light.kajplats_gu10_ws_575lm_2
+      - light.kajplats_gu10_ws_575lm_3
+      farben:
+      - 2700
+      - 4000
+      - 6500
+      taste_1_entities:
+      - event.bilresa_dual_button_taste_1_3
+      - event.bilresa_dual_button_taste_1
+      taste_2_entities:
+      - event.bilresa_dual_button_taste_2_3
+      - event.bilresa_dual_button_taste_2
+      taste: '{{ 1 if trigger.entity_id in taste_1_entities else 2 }}'
+      presse: '{{ trigger.to_state.attributes.event_type }}'
+      target_lamp: '{% set ent = expand(lamps) | sort(attribute=''last_changed'')
+        | last %} {{ ent.entity_id if ent is not none and ent.state == ''on'' else
+        '''' }}'
+      is_wiederholung: "{{ target_lamp != ''\n   and presse in ['multi_press_1', 'multi_press_2']\n
+        \  and trigger.from_state is not none\n   and trigger.from_state.attributes
+        is defined\n   and trigger.from_state.attributes.event_type is defined\n   and
+        trigger.from_state.attributes.event_type == presse\n   and (as_timestamp(trigger.to_state.last_changed)
+        - as_timestamp(trigger.from_state.last_changed)) < 2 }}"
+      aktuelle_farbe: '{{ state_attr(target_lamp, ''color_temp_kelvin'') if target_lamp
+        != '''' else none }}'
+      naechste_farbe: "{% if aktuelle_farbe is none %}\n  {{ farben[0] }}\n{% else
+        %}\n  {% set ns = namespace(idx=0, best=None) %}\n  {% for i in range(farben
+        | length) %}\n    {% set diff = (farben[i] - aktuelle_farbe) | abs %}\n    {%
+        if ns.best is none or diff < ns.best %}\n      {% set ns.best = diff %}\n
+        \     {% set ns.idx = i %}\n    {% endif %}\n  {% endfor %}\n  {{ farben[(ns.idx
+        + 1) % (farben | length)] }}\n{% endif %}"
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == 1 and presse == ''multi_press_1'' }}'
+      sequence:
+      - if:
+        - condition: template
+          value_template: '{{ is_wiederholung }}'
+        then:
+        - target:
+            entity_id: '{{ target_lamp }}'
+          data:
+            color_temp_kelvin: '{{ naechste_farbe }}'
+          action: light.turn_on
+        else:
+        - if:
+          - condition: state
+            entity_id: light.kajplats_gu10_ws_575lm
+            state: 'off'
+          then:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm
+            action: light.turn_on
+          else:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm
+            action: light.turn_off
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == 1 and presse == ''multi_press_2'' }}'
+      sequence:
+      - if:
+        - condition: template
+          value_template: '{{ is_wiederholung }}'
+        then:
+        - target:
+            entity_id: '{{ target_lamp }}'
+          data:
+            color_temp_kelvin: '{{ naechste_farbe }}'
+          action: light.turn_on
+        else:
+        - if:
+          - condition: state
+            entity_id: light.kajplats_gu10_ws_575lm_3
+            state: 'off'
+          then:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm_3
+            action: light.turn_on
+          else:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm_3
+            action: light.turn_off
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == 1 and presse == ''long_press'' and target_lamp
+          != '''' }}'
+      sequence:
+      - variables:
+          dim_pct: '{{ ((state_attr(target_lamp, ''brightness'') | default(255)) /
+            255 * 100) | round(0) }}'
+      - repeat:
+          sequence:
+          - variables:
+              dim_pct: '{{ [dim_pct + 10, 100] | min }}'
+          - target:
+              entity_id: '{{ target_lamp }}'
+            data:
+              brightness_pct: '{{ dim_pct }}'
+              transition: 0.3
+            action: light.turn_on
+          - delay:
+              milliseconds: 300
+          until:
+          - condition: template
+            value_template: '{{ dim_pct >= 100 or repeat.index >= 200 }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == 2 and presse == ''multi_press_1'' }}'
+      sequence:
+      - if:
+        - condition: template
+          value_template: '{{ is_wiederholung }}'
+        then:
+        - target:
+            entity_id: '{{ target_lamp }}'
+          data:
+            color_temp_kelvin: '{{ naechste_farbe }}'
+          action: light.turn_on
+        else:
+        - if:
+          - condition: state
+            entity_id: light.kajplats_gu10_ws_575lm_2
+            state: 'off'
+          then:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm_2
+            action: light.turn_on
+          else:
+          - target:
+              entity_id: light.kajplats_gu10_ws_575lm_2
+            action: light.turn_off
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == 2 and presse == ''long_press'' and target_lamp
+          != '''' }}'
+      sequence:
+      - variables:
+          dim_pct: '{{ ((state_attr(target_lamp, ''brightness'') | default(255)) /
+            255 * 100) | round(0) }}'
+      - repeat:
+          sequence:
+          - variables:
+              dim_pct: '{{ [dim_pct - 10, 1] | max }}'
+          - target:
+              entity_id: '{{ target_lamp }}'
+            data:
+              brightness_pct: '{{ dim_pct }}'
+              transition: 0.3
+            action: light.turn_on
+          - delay:
+              milliseconds: 300
+          until:
+          - condition: template
+            value_template: '{{ dim_pct <= 1 or repeat.index >= 200 }}'
+  mode: restart
+  max_exceeded: silent
+
