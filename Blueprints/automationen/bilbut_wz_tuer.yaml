@@ -1,0 +1,78 @@
+- id: '1788965902384'
+  alias: BILBUT_WZ_Tuer
+  description: ''
+  use_blueprint:
+    path: meine_ikea/bilrease_dual_button.yaml
+    input:
+      taste_1: event.wohnzimmer_bilbut_wz_tuer_taste_1
+      taste_2: event.wohnzimmer_bilbut_wz_tuer_taste_2
+      t1_einfach:
+      - action: switch.toggle
+        metadata: {}
+        target:
+          entity_id: switch.ins_kleine_lampe
+        data: {}
+      t2_einfach:
+      - action: script.tts_zeitansage
+        metadata: {}
+        data: {}
+      t1_doppelt:
+      - action: switch.toggle
+        metadata: {}
+        target:
+          entity_id: switch.wz_ins_schwibbogen
+        data: {}
+      t2_doppelt:
+      - action: script.tts_tesla_statusansage
+        metadata: {}
+        data:
+          kameras:
+          - wohnzimmer
+          sound: chime
+          warten: false
+      t2_los: []
+      t2_lang:
+      - action: script.tts_wetterbericht
+        metadata: {}
+        data: {}
+      t1_lang:
+      - if:
+        - condition: switch.is_off
+          target:
+            entity_id: switch.az_ins_monitor
+          options:
+            behavior: any
+            for: 00:00:00
+        then:
+        - action: switch.turn_on
+          metadata: {}
+          target:
+            entity_id: switch.az_ins_monitor
+          data: {}
+        - delay:
+            hours: 0
+            minutes: 1
+            seconds: 5
+            milliseconds: 0
+        - action: media_player.select_source
+          metadata: {}
+          target:
+            entity_id: media_player.fire_tv_4k
+          data:
+            source: org.jellyfin.androidtv
+        else:
+        - action: media_player.turn_off
+          metadata: {}
+          target:
+            device_id: 3cffefa141b80b53f82e96103947f94d
+          data: {}
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 10
+            milliseconds: 0
+        - action: switch.turn_off
+          metadata: {}
+          target:
+            entity_id: switch.az_ins_monitor
+          data: {}
