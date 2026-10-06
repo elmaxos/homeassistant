@@ -6,7 +6,7 @@
     Druck derselben Taste/desselben Klicktyps <2s nach dem letzten Klick (auf DERSELBEN
     Fernbedienung) -> Farbwechsel der zuletzt aktiven Lampe statt erneutem Togglen
     (3 feste Werte, beliebig oft weiterschaltbar solange <2s Abstand) Taste1 halten
-    (long_press..long_release) -> zuletzt aktive Lampe heller (20 % alle 0,6 s) Taste2 halten (long_press..long_release)
+    (long_press..long_release) -> zuletzt aktive Lampe heller (10 % alle 0,4 s) Taste2 halten (long_press..long_release)
     -> zuletzt aktive Lampe dunkler "Zuletzt aktive Lampe" = Lampe mit dem neuesten
     last_changed, sofern sie an ist. Da beide Fernbedienungen dieselben Lampen steuern,
     unterbricht ein Tastendruck auf der jeweils anderen Fernbedienung bewusst einen
@@ -119,15 +119,15 @@
       - repeat:
           sequence:
           - variables:
-              dim_pct: '{{ [dim_pct + 20, 100] | min }}'
+              dim_pct: '{{ [dim_pct + 10, 100] | min }}'
           - target:
               entity_id: '{{ target_lamp }}'
             data:
               brightness_pct: '{{ dim_pct }}'
-              transition: 0.6
+              transition: 0.4
             action: light.turn_on
           - delay:
-              milliseconds: 600
+              milliseconds: 400
           until:
           - condition: template
             value_template: '{{ dim_pct >= 100 or repeat.index >= 200 }}'
@@ -168,15 +168,15 @@
       - repeat:
           sequence:
           - variables:
-              dim_pct: '{{ [dim_pct - 20, 1] | max }}'
+              dim_pct: '{{ [dim_pct - 10, 1] | max }}'
           - target:
               entity_id: '{{ target_lamp }}'
             data:
               brightness_pct: '{{ dim_pct }}'
-              transition: 0.6
+              transition: 0.4
             action: light.turn_on
           - delay:
-              milliseconds: 600
+              milliseconds: 400
           until:
           - condition: template
             value_template: '{{ dim_pct <= 1 or repeat.index >= 200 }}'
