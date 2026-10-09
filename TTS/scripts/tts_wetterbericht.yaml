@@ -1,0 +1,127 @@
+tts_wetterbericht:
+  alias: tts_wetterbericht
+  description: Wetterbericht mit Benachrichtigungston und Frauenstimme. Vor 16 Uhr
+    fuer den Rest von heute, ab 16 Uhr fuer morgen. Wind nur ab 39 km/h, Sensor-Temperaturen
+    nur, wenn sie hoechstens 1 h alt sind.
+  sequence:
+  - action: weather.get_forecasts
+    target:
+      entity_id: weather.forecast_home
+    data:
+      type: hourly
+    response_variable: wetter_roh
+  - action: script.tts_cam_sound_text
+    data:
+      kameras:
+      - wohnzimmer
+      sound: notification
+      voice: de_DE-eva_k-x_low
+      message: |-
+        {%- set fc = wetter_roh['weather.forecast_home'].forecast -%}
+        {%- set jetzt = now() -%}
+        {#- Ab 16 Uhr: Vorhersage fuer morgen statt Resttag heute -#}
+        {%- set morgen_modus = jetzt.hour >= 16 -%}
+        {%- set heute_tag = jetzt.strftime('%Y-%m-%d') -%}
+        {%- set morgen_tag = (jetzt + timedelta(days=1)).strftime('%Y-%m-%d') -%}
+        {%- set ziel_tag = morgen_tag if morgen_modus else heute_tag -%}
+        {%- set tag = 'morgen' if morgen_modus else 'heute' -%}
+        {%- set Tag = tag | capitalize -%}
+        {%- set WIND_SCHWELLE = 39 -%}
+
+        {#- --- 0. Aktuelle Temperaturen: nur Sensoren, die sich in der letzten Stunde gemeldet haben --- -#}
+        {%- set ns_cur = namespace(draussen=none, orte=[]) -%}
+        {%- for e, label in [('sensor.openweathermap_temperatur', ''),
+                             ('sensor.soil_garten_temperature', 'im Vorgarten sind es '),
+                             ('sensor.timmerflotte_temp_hmd_sensor_temperatur', 'am Unterstand ')] -%}
+          {%- set s = expand(e) | first -%}
+          {%- if s and s.state | is_number and (jetzt - s.last_reported).total_seconds() <= 3600 -%}
+            {%- set t = s.state | float | round(0) | int -%}
+            {%- if label == '' -%}{%- set ns_cur.draussen = t -%}
+            {%- else -%}{%- set ns_cur.orte = ns_cur.orte + [label ~ t ~ ' Grad'] -%}{%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {#- --- Vorhersage fuer den Zieltag (Stunden in lokaler Zeit) --- -#}
+        {%- set ns_i = namespace(items=[], nacht=[]) -%}
+        {%- for i in fc -%}
+          {%- set dt = as_local(as_datetime(i.datetime)) -%}
+          {%- set d = dt.strftime('%Y-%m-%d') -%}
+          {%- if d == ziel_tag -%}{%- set ns_i.items = ns_i.items + [i] -%}{%- endif -%}
+          {%- if (d == heute_tag and dt.hour >= 22) or (d == morgen_tag and dt.hour <= 8) -%}
+            {%- set ns_i.nacht = ns_i.nacht + [i] -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- set items = ns_i.items if ns_i.items | length > 0 else fc[:24] -%}
+
+        {#- --- 1. Hoechsttemperatur --- -#}
+        {%- set max_item = (items | sort(attribute='temperature', reverse=true))[0] -%}
+        {%- set max_temp = max_item.temperature | round(0) | int -%}
+        {%- set max_dt = as_local(as_datetime(max_item.datetime)) -%}
+        {%- set max_uhrzeit = max_dt.strftime('%-H Uhr') -%}
+
+        {#- --- 2. Tagesabschnitte --- -#}
+        {%- set ns_z = namespace(e=[]) -%}
+        {%- for slot in [(10, 'morgens'), (13, 'mittags'), (16, 'nachmittags'), (19, 'abends'), (22, 'nachts')] -%}
+          {%- for i in items if as_local(as_datetime(i.datetime)).hour == slot[0] -%}
+            {%- set ns_z.e = ns_z.e + [slot[1] ~ ' ' ~ (i.temperature | round(0) | int) ~ ' Grad'] -%}
+          {%- endfor -%}
+        {%- endfor -%}
+        {%- if ns_z.e | length > 1 -%}
+          {%- set v = ns_z.e[:-1] | join(', ') ~ ' und ' ~ ns_z.e[-1] -%}
+          {%- set temp_verlauf = v[0] | upper ~ v[1:] ~ '.' -%}
+        {%- elif ns_z.e | length == 1 -%}
+          {%- set temp_verlauf = ns_z.e[0][0] | upper ~ ns_z.e[0][1:] ~ '.' -%}
+        {%- else -%}
+          {%- set temp_verlauf = '' -%}
+        {%- endif -%}
+
+        {#- --- 3. Regen tagsueber (bis 22 Uhr; morgen ab 9 Uhr, davor zaehlt zur Nacht) --- -#}
+        {%- set ns_r = namespace(tag=0, nacht=0, nacht_min=none) -%}
+        {%- for i in items -%}
+          {%- set h = as_local(as_datetime(i.datetime)).hour -%}
+          {%- if h < 22 and (not morgen_modus or h > 8) -%}
+            {%- set ns_r.tag = ns_r.tag + (i.precipitation or 0) -%}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- for i in ns_i.nacht -%}
+          {%- set ns_r.nacht = ns_r.nacht + (i.precipitation or 0) -%}
+        {%- endfor -%}
+        {%- set regen_tag = ns_r.tag | round(0) | int -%}
+        {%- set regen_nacht = ns_r.nacht | round(0) | int -%}
+        {%- set nacht_min = (ns_i.nacht | map(attribute='temperature') | min | round(0) | int) if ns_i.nacht | length > 0 else none -%}
+
+        {#- --- 4. Wind nur, wenn es sehr windig wird --- -#}
+        {%- set max_wind = items | map(attribute='wind_speed') | max | round(0) | int -%}
+
+        {#- --- 5. Bewoelkung 10-17 Uhr --- -#}
+        {%- set ns_c = namespace(w=[]) -%}
+        {%- for i in items -%}
+          {%- set h = as_local(as_datetime(i.datetime)).hour -%}
+          {%- if 10 <= h <= 17 and i.cloud_coverage is defined -%}{%- set ns_c.w = ns_c.w + [i.cloud_coverage] -%}{%- endif -%}
+        {%- endfor -%}
+        {%- set avg_cloud = (ns_c.w | sum / ns_c.w | length) if ns_c.w | length > 0 else none -%}
+
+        {#- --- 6. Sonne --- -#}
+        {%- set sonne_attr = 'next_rising' if morgen_modus else 'next_setting' -%}
+        {%- set sonne_dt = as_local(as_datetime(state_attr('sun.sun', sonne_attr))) if state_attr('sun.sun', sonne_attr) else none -%}
+        {%- set sonne_zeit = (sonne_dt.strftime('%-H Uhr') if sonne_dt.minute == 0 else sonne_dt.strftime('%-H Uhr %-M')) if sonne_dt else none -%}
+
+        {#- --- ZUSAMMENSTELLUNG --- -#}
+        {{ 'Guten Morgen!' if jetzt.hour < 11 else ('Hallo!' if jetzt.hour < 18 else 'Guten Abend!') }}
+        {% if ns_cur.draussen is not none %}Draußen sind es {{ ns_cur.draussen }} Grad. {% endif %}
+        {%- if ns_cur.orte | length > 0 %}{% set o = ns_cur.orte | join(', ') %}{{ o[0] | upper ~ o[1:] }}. {% endif %}
+        {%- if morgen_modus %}
+        {%- if nacht_min is not none %}In der Nacht kühlt es auf {{ nacht_min }} Grad ab. {% endif %}
+        {%- if regen_nacht > 1 %}Kommende Nacht gibt es rund {{ regen_nacht }} Liter Regen pro Quadratmeter. {% elif ns_r.nacht > 0 %}Kommende Nacht gibt es etwas Regen. {% else %}Die Nacht bleibt trocken. {% endif %}
+        {%- endif %}
+        {{ Tag }} wird es bis zu {{ max_temp }} Grad warm, am wärmsten gegen {{ max_uhrzeit }}. {{ temp_verlauf }}
+        {% if regen_tag > 1 %}{{ Tag }} ist mit rund {{ regen_tag }} Litern Regen pro Quadratmeter zu rechnen.
+        {%- elif ns_r.tag > 0 %}{{ Tag }} ist mit leichtem Regen von etwa einem Liter pro Quadratmeter zu rechnen.
+        {%- else %}{{ Tag }} bleibt es tagsüber trocken.{% endif %}
+        {% if max_wind >= WIND_SCHWELLE %}Achtung, {{ tag }} wird es sehr windig mit bis zu {{ max_wind }} Kilometer pro Stunde. {% endif %}
+        {%- if avg_cloud is not none %}{{ Tag }} wird es tagsüber {{ 'meist sonnig' if avg_cloud < 20 else ('heiter bis wolkig' if avg_cloud < 60 else 'überwiegend stark bewölkt') }}. {% endif %}
+        {%- if sonne_zeit %}{{ ('Sonnenaufgang ist morgen um ' if morgen_modus else 'Sonnenuntergang ist um ') ~ sonne_zeit }}. {% endif %}
+        {%- if not morgen_modus %}
+        {%- if regen_nacht > 1 %}Kommende Nacht gibt es rund {{ regen_nacht }} Liter Regen pro Quadratmeter.{% elif ns_r.nacht > 0 %}Kommende Nacht gibt es etwas Regen.{% else %}In der Nacht bleibt es bis morgen früh trocken.{% endif %}
+        {%- endif %}
+  mode: single

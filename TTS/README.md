@@ -27,6 +27,17 @@ holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ord
 | `tts_cam_sound_text.yaml` | Hauptskript: Sound und/oder Text auf einer oder mehreren Kameras. Felder: Nachricht, Kameras, Sound, Stimme, Pause nach Sound, Zweimal, Auf Anwesenheit warten, Licht einschalten. |
 | `tts_test_4420.yaml` | Testaufruf für die Kamera 4420. |
 | `tts_zeitansage.yaml` | Stündliche Zeitansage (nutzt das Hauptskript). |
+| `tts_wetterbericht.yaml` | Wetterbericht aus `weather.forecast_home` (stündliche Vorhersage), siehe unten. |
+
+### Wetterbericht
+
+- **Vor 16 Uhr:** Rest von heute (Höchstwert, Tagesabschnitte, Regen, Bewölkung, Sonnenuntergang, Regen in der Nacht).
+- **Ab 16 Uhr:** erst die kommende Nacht (Tiefstwert, Regen), dann die Vorhersage für morgen (Höchstwert,
+  Tagesabschnitte, Regen ab 9 Uhr, Bewölkung, Sonnenaufgang).
+- **Wind** nur, wenn das Stundenmittel 39 km/h erreicht (Beaufort 6). Die Schwelle steht als `WIND_SCHWELLE` im Template.
+- **Sensor-Temperaturen** (OpenWeatherMap, Vorgarten, Unterstand) nur, wenn sich der Sensor in der letzten Stunde
+  gemeldet hat (`last_reported`).
+- Begrüßung nach Uhrzeit: bis 11 Uhr „Guten Morgen“, bis 18 Uhr „Hallo“, danach „Guten Abend“.
 
 Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-sonoff-pt2-4420`, `handy` = Android-TTS auf
 `notify.mobile_app_sm_g781b` (nur der Text, kein Sound, kein Licht; Piper wird dafür nicht aufgerufen).
