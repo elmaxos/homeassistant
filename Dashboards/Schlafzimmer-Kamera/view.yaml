@@ -38,26 +38,6 @@ sections:
           perform_action: button.press
           target:
             entity_id: button.ing_sonoff_pt2_a574_ptz_up_fast
-        actions_zoom_in_start:
-          action: custom:advanced-camera-card-action
-          advanced_camera_card_action: ptz_digital
-          ptz_action: zoom_in
-          ptz_phase: start
-        actions_zoom_in_stop:
-          action: custom:advanced-camera-card-action
-          advanced_camera_card_action: ptz_digital
-          ptz_action: zoom_in
-          ptz_phase: stop
-        actions_zoom_out_start:
-          action: custom:advanced-camera-card-action
-          advanced_camera_card_action: ptz_digital
-          ptz_action: zoom_out
-          ptz_phase: start
-        actions_zoom_out_stop:
-          action: custom:advanced-camera-card-action
-          advanced_camera_card_action: ptz_digital
-          ptz_action: zoom_out
-          ptz_phase: stop
         presets:
           Ansicht 1:
             action: perform-action
@@ -79,6 +59,48 @@ sections:
           mode: 'on'
           position: bottom-right
           orientation: horizontal
+    menu:
+      style: overlay
+      position: top
+      alignment: right
+    elements:
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-plus-outline
+      title: Zoom +
+      start_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_in
+        ptz_phase: start
+      end_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_in
+        ptz_phase: stop
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-minus-outline
+      title: Zoom -
+      start_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_out
+        ptz_phase: start
+      end_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_out
+        ptz_phase: stop
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-close
+      title: Zoom zuruecksetzen
+      tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        absolute:
+          zoom: 1
+          pan:
+            x: 50
+            y: 50
     dimensions:
       aspect_ratio: '16:9'
     grid_options:
