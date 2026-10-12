@@ -1,0 +1,162 @@
+type: sections
+title: Schlafzimmer
+path: schlafzimmer-kamera
+icon: mdi:cctv
+max_columns: 2
+sections:
+- type: grid
+  column_span: 2
+  cards:
+  - type: heading
+    heading: Schlafzimmer-Kamera
+    heading_style: title
+    icon: mdi:bed
+  - type: custom:advanced-camera-card
+    cameras:
+    - camera_entity: camera.sonoff_pt2_3_profile_0
+      title: Schlafzimmer
+      icon: mdi:bed
+      ptz:
+        r2c_delay_between_calls_seconds: 0.4
+        actions_left:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_right_fast
+        actions_right:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_left_fast
+        actions_up:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_down_fast
+        actions_down:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_up_fast
+        actions_zoom_in_start:
+          action: custom:advanced-camera-card-action
+          advanced_camera_card_action: ptz_digital
+          ptz_action: zoom_in
+          ptz_phase: start
+        actions_zoom_in_stop:
+          action: custom:advanced-camera-card-action
+          advanced_camera_card_action: ptz_digital
+          ptz_action: zoom_in
+          ptz_phase: stop
+        actions_zoom_out_start:
+          action: custom:advanced-camera-card-action
+          advanced_camera_card_action: ptz_digital
+          ptz_action: zoom_out
+          ptz_phase: start
+        actions_zoom_out_stop:
+          action: custom:advanced-camera-card-action
+          advanced_camera_card_action: ptz_digital
+          ptz_action: zoom_out
+          ptz_phase: stop
+        presets:
+          Ansicht 1:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_a574_preset_1_load
+          Privat:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_a574_preset_0_load
+    live:
+      zoomable: true
+      draggable: false
+      lazy_unload:
+      - hidden
+      controls:
+        ptz:
+          mode: 'on'
+          position: bottom-right
+          orientation: horizontal
+    dimensions:
+      aspect_ratio: '16:9'
+    grid_options:
+      columns: full
+- type: grid
+  cards:
+  - type: heading
+    heading: Position
+    heading_style: subtitle
+  - type: tile
+    entity: button.ing_sonoff_pt2_a574_preset_1_load
+    name: Ansicht 1
+    vertical: false
+    icon: mdi:numeric-1-box
+    tap_action:
+      action: perform-action
+      perform_action: button.press
+      target:
+        entity_id: button.ing_sonoff_pt2_a574_preset_1_load
+  - type: tile
+    entity: button.ing_sonoff_pt2_a574_preset_0_load
+    name: Privat
+    vertical: false
+    icon: mdi:incognito
+    tap_action:
+      action: perform-action
+      perform_action: button.press
+      target:
+        entity_id: button.ing_sonoff_pt2_a574_preset_0_load
+  - type: tile
+    entity: button.ing_sonoff_pt2_a574_position_reset
+    name: Mitte
+    vertical: false
+    icon: mdi:image-filter-center-focus
+    tap_action:
+      action: perform-action
+      perform_action: button.press
+      target:
+        entity_id: button.ing_sonoff_pt2_a574_position_reset
+  - type: tile
+    entity: switch.ing_sonoff_pt2_a574_privacy
+    name: Privatsphäre
+    vertical: false
+    icon: mdi:eye-off
+    tap_action:
+      action: toggle
+- type: grid
+  cards:
+  - type: heading
+    heading: Licht & Bild
+    heading_style: subtitle
+  - type: tile
+    entity: switch.ing_sonoff_pt2_a574_white_light
+    name: Weißlicht
+    vertical: false
+    icon: mdi:light-flood-down
+    tap_action:
+      action: toggle
+  - type: tile
+    entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
+    name: IR-Licht
+    vertical: false
+    icon: mdi:led-outline
+    tap_action:
+      action: toggle
+  - type: tile
+    entity: select.ing_sonoff_pt2_a574_day_night_mode
+    name: Tag/Nacht
+    vertical: false
+    icon: mdi:theme-light-dark
+    tap_action:
+      action: more-info
+    features:
+    - type: select-options
+  - type: tile
+    entity: switch.ing_sonoff_pt2_a574_status_led
+    name: Status-LED
+    vertical: false
+    icon: mdi:led-on
+    tap_action:
+      action: toggle
