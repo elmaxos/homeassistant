@@ -1,0 +1,322 @@
+type: sections
+title: Kameras
+path: kameras-ptz
+icon: mdi:cctv
+max_columns: 4
+sections:
+- type: grid
+  column_span: 4
+  cards:
+  - type: custom:advanced-camera-card
+    cameras:
+    - id: unterstand
+      camera_entity: camera.sonoff_pt2_1_profile_0
+      title: Unterstand
+      icon: mdi:home-roof
+      ptz:
+        r2c_delay_between_calls_seconds: 0.4
+        actions_left:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_3684_ptz_left_fast
+        actions_right:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_3684_ptz_right_fast
+        actions_up:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_3684_ptz_up_fast
+        actions_down:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_3684_ptz_down_fast
+        presets:
+          Preset 1:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_3684_preset_1_load
+          Preset 2:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_3684_preset_2_load
+          Preset 0:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_3684_preset_0_load
+    - id: schlafzimmer
+      camera_entity: camera.sonoff_pt2_3_profile_0
+      title: Schlafzimmer
+      icon: mdi:bed
+      ptz:
+        r2c_delay_between_calls_seconds: 0.4
+        actions_left:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_right_fast
+        actions_right:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_left_fast
+        actions_up:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_down_fast
+        actions_down:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_a574_ptz_up_fast
+        presets:
+          Ansicht 1:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_a574_preset_1_load
+          Privat:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_a574_preset_0_load
+    - id: pt2_26a4
+      camera_entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0
+      title: PT2 2 (26a4)
+      icon: mdi:cctv
+      ptz:
+        r2c_delay_between_calls_seconds: 0.4
+        actions_left:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_26a4_ptz_right_fast
+        actions_right:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_26a4_ptz_left_fast
+        actions_up:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_26a4_ptz_down_fast
+        actions_down:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_26a4_ptz_up_fast
+        presets:
+          Preset 1:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_26a4_preset_1_load
+          Preset 0:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_26a4_preset_0_load
+    - id: kamera4420
+      camera_entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2
+      title: Kamera 4420
+      icon: mdi:cctv
+      ptz:
+        r2c_delay_between_calls_seconds: 0.4
+        actions_left:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_4420_ptz_left_fast
+        actions_right:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_4420_ptz_right_fast
+        actions_up:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_4420_ptz_up_fast
+        actions_down:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.ing_sonoff_pt2_4420_ptz_down_fast
+        presets:
+          Preset 0:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_4420_preset_0_load
+          Preset 1:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.ing_sonoff_pt2_4420_preset_1_load
+    view:
+      default: live
+    live:
+      zoomable: true
+      draggable: false
+      preload: false
+      lazy_unload:
+      - unselected
+      - hidden
+      display:
+        mode: single
+      controls:
+        ptz:
+          mode: 'on'
+          position: bottom-right
+          orientation: horizontal
+    menu:
+      style: overlay
+      position: top
+      alignment: right
+    elements:
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-plus-outline
+      title: Zoom +
+      start_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_in
+        ptz_phase: start
+      end_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_in
+        ptz_phase: stop
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-minus-outline
+      title: Zoom -
+      start_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_out
+        ptz_phase: start
+      end_tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        ptz_action: zoom_out
+        ptz_phase: stop
+    - type: custom:advanced-camera-card-menu-icon
+      icon: mdi:magnify-close
+      title: Zoom zuruecksetzen
+      tap_action:
+        action: custom:advanced-camera-card-action
+        advanced_camera_card_action: ptz_digital
+        absolute:
+          zoom: 1
+          pan:
+            x: 50
+            y: 50
+    - type: custom:advanced-camera-card-conditional
+      conditions:
+      - condition: camera
+        cameras:
+        - unterstand
+      elements:
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_white_light
+        icon: mdi:light-flood-down
+        title: Weisslicht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_ir_light_850nm
+        icon: mdi:led-outline
+        title: IR-Licht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_privacy
+        icon: mdi:eye-off
+        title: Privatsphaere
+        tap_action:
+          action: toggle
+    - type: custom:advanced-camera-card-conditional
+      conditions:
+      - condition: camera
+        cameras:
+        - schlafzimmer
+      elements:
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_white_light
+        icon: mdi:light-flood-down
+        title: Weisslicht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
+        icon: mdi:led-outline
+        title: IR-Licht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_privacy
+        icon: mdi:eye-off
+        title: Privatsphaere
+        tap_action:
+          action: toggle
+    - type: custom:advanced-camera-card-conditional
+      conditions:
+      - condition: camera
+        cameras:
+        - pt2_26a4
+      elements:
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_white_light
+        icon: mdi:light-flood-down
+        title: Weisslicht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_ir_light_850nm
+        icon: mdi:led-outline
+        title: IR-Licht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_privacy
+        icon: mdi:eye-off
+        title: Privatsphaere
+        tap_action:
+          action: toggle
+    - type: custom:advanced-camera-card-conditional
+      conditions:
+      - condition: camera
+        cameras:
+        - kamera4420
+      elements:
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_4420_white_light
+        icon: mdi:light-flood-down
+        title: Weisslicht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_4420_ir_light_850nm
+        icon: mdi:led-outline
+        title: IR-Licht
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_4420_privacy
+        icon: mdi:eye-off
+        title: Privatsphaere
+        tap_action:
+          action: toggle
+    dimensions:
+      aspect_ratio: '16:9'
+    grid_options:
+      columns: full
