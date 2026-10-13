@@ -6,14 +6,17 @@ Konfiguration: [view.yaml](view.yaml), erzeugt von [cams_view.py](cams_view.py) 
 
 | Kamera | Host | IP | Kamera-Entity (Hauptstream) | Pfeile |
 |---|---|---|---|---|
-| Unterstand | `ing-sonoff-pt2-3684` | .71 | `camera.sonoff_pt2_1_profile_0` | normal |
+| Wohnzimmer | `ing-sonoff-pt2-3684` | .71 | `camera.sonoff_pt2_1_profile_0` | normal |
 | Schlafzimmer | `ing-sonoff-pt2-a574` | .74 | `camera.sonoff_pt2_3_profile_0` | vertauscht |
-| PT2 2 (26a4) | `ing-sonoff-pt2-26a4` | .73 | `camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0` | vertauscht |
+| Unterstand | `ing-sonoff-pt2-26a4` | .73 | `camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1` (Substream!) | vertauscht |
 | Kamera 4420 | `ing-sonoff-pt2-4420` | .72 | `camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2` | normal |
 
 „Vertauscht“: links → `ptz_right_fast`, hoch → `ptz_down_fast` (wie im alten Tab `Kamera`). Das betrifft die Kameras,
 deren Bild nicht per Flip gedreht ist. Bei 3684 und 4420 sind horizontaler und vertikaler Flip an, dort passen die Pfeile direkt.
 Für 4420 ist das aus der Flip-Einstellung abgeleitet und noch nicht ausprobiert.
+
+Unterstand (26a4): Am Hauptstream ist das Video abgeschaltet (`switch.ing_sonoff_pt2_26a4_main_stream_video` aus),
+deshalb nutzt die Karte dort den Substream `profile_1` (640×360). Mit `profile_0` bleibt das Bild schwarz.
 
 ## Voraussetzung
 

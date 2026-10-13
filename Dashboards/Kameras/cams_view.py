@@ -7,14 +7,15 @@ PATH = "kameras-ptz"
 # Thingino-Kameras. invert=True: Bild nicht gedreht (flip aus) -> Pfeile vertauscht verdrahtet,
 # wie im bestehenden Tab "Kamera" fuer 26a4/a574; bei 3684/4420 ist das Bild per flip um 180 Grad gedreht.
 CAMS = [
-    {"id": "unterstand", "host": "ing_sonoff_pt2_3684", "title": "Unterstand", "icon": "mdi:home-roof",
+    {"id": "wohnzimmer", "host": "ing_sonoff_pt2_3684", "title": "Wohnzimmer", "icon": "mdi:sofa",
      "entity": "camera.sonoff_pt2_1_profile_0", "invert": False,
      "presets": [("Preset 1", 1), ("Preset 2", 2), ("Preset 0", 0)]},
     {"id": "schlafzimmer", "host": "ing_sonoff_pt2_a574", "title": "Schlafzimmer", "icon": "mdi:bed",
      "entity": "camera.sonoff_pt2_3_profile_0", "invert": True,
      "presets": [("Ansicht 1", 1), ("Privat", 0)]},
-    {"id": "pt2_26a4", "host": "ing_sonoff_pt2_26a4", "title": "PT2 2 (26a4)", "icon": "mdi:cctv",
-     "entity": "camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0", "invert": True,
+    {"id": "unterstand", "host": "ing_sonoff_pt2_26a4", "title": "Unterstand", "icon": "mdi:home-roof",
+     # Hauptstream-Video ist an dieser Kamera aus -> Substream (profile_1)
+     "entity": "camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1", "invert": True,
      "presets": [("Preset 1", 1), ("Preset 0", 0)]},
     {"id": "kamera4420", "host": "ing_sonoff_pt2_4420", "title": "Kamera 4420", "icon": "mdi:cctv",
      "entity": "camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2", "invert": False,

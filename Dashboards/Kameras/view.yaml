@@ -9,10 +9,10 @@ sections:
   cards:
   - type: custom:advanced-camera-card
     cameras:
-    - id: unterstand
+    - id: wohnzimmer
       camera_entity: camera.sonoff_pt2_1_profile_0
-      title: Unterstand
-      icon: mdi:home-roof
+      title: Wohnzimmer
+      icon: mdi:sofa
       ptz:
         r2c_delay_between_calls_seconds: 0.4
         actions_left:
@@ -88,10 +88,10 @@ sections:
             perform_action: button.press
             target:
               entity_id: button.ing_sonoff_pt2_a574_preset_0_load
-    - id: pt2_26a4
-      camera_entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0
-      title: PT2 2 (26a4)
-      icon: mdi:cctv
+    - id: unterstand
+      camera_entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1
+      title: Unterstand
+      icon: mdi:home-roof
       ptz:
         r2c_delay_between_calls_seconds: 0.4
         actions_left:
@@ -224,7 +224,7 @@ sections:
       conditions:
       - condition: camera
         cameras:
-        - unterstand
+        - wohnzimmer
       elements:
       - type: custom:advanced-camera-card-menu-state-icon
         entity: switch.ing_sonoff_pt2_3684_white_light
@@ -272,7 +272,7 @@ sections:
       conditions:
       - condition: camera
         cameras:
-        - pt2_26a4
+        - unterstand
       elements:
       - type: custom:advanced-camera-card-menu-state-icon
         entity: switch.ing_sonoff_pt2_26a4_white_light
