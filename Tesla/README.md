@@ -5,7 +5,7 @@ Schnelleres Polling läuft über Automationen mit `homeassistant.update_entity` 
 
 | Datei | Zweck |
 |---|---|
-| `automationen/tesla_fenster_automatik.yaml` | Fenster nach Wetter/Zeit |
+| `automationen/tesla_fenster_automatik.yaml` | Fenster nach Wetter/Zeit. Regen/Schnee schließt die Fenster; Ansagen nur, wenn `device_tracker.fky_standort` = home. Bei schon geschlossenen Fenstern nur „Es regnet.“ Auslöser nur beim Wechsel auf Regen/Schnee (früher auch beim Aufhören des Regens). |
 | `automationen/tesla_ankunfts_benachrichtigung.yaml` | Ansagen zur Navigation: **neues Ziel** (Ziel, Ankunftszeit, Strecke; Navi-Ziel setzt `input_text.tesla_letztes_ziel`), **angekommen** (Navigation endet und Ankunftszeit liegt höchstens 5 min in der Zukunft; Abbruch der Navigation sagt nichts). Ansage, sobald ein Navigationsziel (jedes Ziel) weniger als 10 Minuten entfernt ist: Ziel, Ankunftszeit, Minuten, Restkilometer. Zielname: HA-Zone aus `device_tracker.fky_route` (bei `home` „zuhause“), sonst Navi-Ziel `sensor.fky_ziel`, sonst „sein Ziel“. Außerdem Ansage bei Losfahrt Richtung Zuhause und ohne Navigation 1 km vor Zuhause. |
 | `automationen/tesla_ankunfts_benachrichtigung_reset.yaml` | setzt `input_boolean.tesla_ankunft_benachrichtigt` zurück, wenn das Auto > 3 km von zuhause ist |
 | `automationen/tesla_fast_polling_annaeherung.yaml` | Navi-Ziel 15–30 min entfernt: jede Minute; unter 15 min und 3 min nach Ankunft: alle 30 s (kein Wecken) |

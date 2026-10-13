@@ -34,6 +34,11 @@ holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ord
 - **Vor 16 Uhr:** Rest von heute (Höchstwert, Tagesabschnitte, Regen, Bewölkung, Sonnenuntergang, Regen in der Nacht).
 - **Ab 16 Uhr:** erst die kommende Nacht (Tiefstwert, Regen), dann die Vorhersage für morgen (Höchstwert,
   Tagesabschnitte, Regen ab 9 Uhr, Bewölkung, Sonnenaufgang).
+- **Kindergarten-Weg (Mo–Fr):** „Auf dem Weg zum Kindergarten wird es 14 Grad und regnerisch. Dabei wird es
+  leicht regnen. Bis 9 Uhr wird es leicht regnen.“ Ab 16 Uhr für den nächsten Tag („Morgen auf dem Weg …“), vor
+  16 Uhr nur, solange 7:30 noch nicht vorbei ist. Temperatur = Mittel aus 7- und 8-Uhr-Wert, Wetter = 7-Uhr-Wert.
+  Regen je Stunde: unter 0,1 mm „nicht“, unter 2,5 mm „leicht“, sonst „stark“. „Dabei“ = 7–8 Uhr, „bis 9 Uhr“ = stärkere der Stunden 7–8 und 8–9.
+  Feiertage und Schließtage werden nicht berücksichtigt.
 - **Wind** nur, wenn das Stundenmittel 39 km/h erreicht (Beaufort 6). Die Schwelle steht als `WIND_SCHWELLE` im Template.
 - **Sensor-Temperaturen** (OpenWeatherMap, Vorgarten, Unterstand) nur, wenn sich der Sensor in der letzten Stunde
   gemeldet hat (`last_reported`).

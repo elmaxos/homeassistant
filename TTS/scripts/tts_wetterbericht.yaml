@@ -2,7 +2,8 @@ tts_wetterbericht:
   alias: tts_wetterbericht
   description: Wetterbericht mit Benachrichtigungston und Frauenstimme. Vor 16 Uhr
     fuer den Rest von heute, ab 16 Uhr fuer morgen. Wind nur ab 39 km/h, Sensor-Temperaturen
-    nur, wenn sie hoechstens 1 h alt sind.
+    nur, wenn sie hoechstens 1 h alt sind. Mo-Fr zusaetzlich das Wetter um 7:30 auf dem Weg zum Kindergarten
+    und Regen bis 9 Uhr.
   sequence:
   - action: weather.get_forecasts
     target:
@@ -106,6 +107,36 @@ tts_wetterbericht:
         {%- set sonne_dt = as_local(as_datetime(state_attr('sun.sun', sonne_attr))) if state_attr('sun.sun', sonne_attr) else none -%}
         {%- set sonne_zeit = (sonne_dt.strftime('%-H Uhr') if sonne_dt.minute == 0 else sonne_dt.strftime('%-H Uhr %-M')) if sonne_dt else none -%}
 
+        {#- --- 7. Weg zum Kindergarten (Mo-Fr 7:30, nur wenn noch nicht vorbei) --- -#}
+        {#- Stundenwert 7 Uhr = 7-8 Uhr, 8 Uhr = 8-9 Uhr. Regen je Stunde: < 0,1 mm nicht, < 2,5 mm leicht, sonst stark. -#}
+        {%- set kiga_tag = (jetzt + timedelta(days=1)) if morgen_modus else jetzt -%}
+        {%- set ns_k = namespace(h7=none, h8=none) -%}
+        {%- if kiga_tag.isoweekday() <= 5 and kiga_tag.replace(hour=7, minute=30, second=0, microsecond=0) > jetzt -%}
+          {%- for i in fc -%}
+            {%- set dt = as_local(as_datetime(i.datetime)) -%}
+            {%- if dt.strftime('%Y-%m-%d') == kiga_tag.strftime('%Y-%m-%d') -%}
+              {%- if dt.hour == 7 -%}{%- set ns_k.h7 = i -%}{%- elif dt.hour == 8 -%}{%- set ns_k.h8 = i -%}{%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {%- if ns_k.h7 is not none -%}
+          {%- set k_temp = (((ns_k.h7.temperature + (ns_k.h8.temperature if ns_k.h8 is not none else ns_k.h7.temperature)) / 2) | round(0) | int) -%}
+          {%- set wetter_wort = {'clear-night': 'klar', 'sunny': 'sonnig', 'partlycloudy': 'teils bewölkt', 'cloudy': 'bewölkt',
+                                 'fog': 'neblig', 'rainy': 'regnerisch', 'pouring': 'regnerisch', 'snowy': 'verschneit',
+                                 'snowy-rainy': 'nass mit Schneeregen', 'lightning': 'gewittrig', 'lightning-rainy': 'gewittrig',
+                                 'hail': 'hagelig', 'windy': 'windig', 'windy-variant': 'windig'} -%}
+          {%- set k_wort = wetter_wort.get(ns_k.h7.condition, '') -%}
+          {%- set r7 = ns_k.h7.precipitation or 0 -%}
+          {%- set r_max = [r7, ((ns_k.h8.precipitation or 0) if ns_k.h8 is not none else 0)] | max -%}
+          {%- set k_weg = 'nicht' if r7 < 0.1 else ('leicht' if r7 < 2.5 else 'stark') -%}
+          {%- set k_bis9 = 'nicht' if r_max < 0.1 else ('leicht' if r_max < 2.5 else 'stark') -%}
+          {%- set kiga_text = ('Morgen auf dem Weg zum Kindergarten' if morgen_modus else 'Auf dem Weg zum Kindergarten')
+              ~ ' wird es ' ~ k_temp ~ ' Grad' ~ ((' und ' ~ k_wort) if k_wort else '') ~ '. Dabei wird es ' ~ k_weg
+              ~ ' regnen. Bis 9 Uhr wird es ' ~ k_bis9 ~ ' regnen. ' -%}
+        {%- else -%}
+          {%- set kiga_text = '' -%}
+        {%- endif -%}
+
         {#- --- ZUSAMMENSTELLUNG --- -#}
         {{ 'Guten Morgen!' if jetzt.hour < 11 else ('Hallo!' if jetzt.hour < 18 else 'Guten Abend!') }}
         {% if ns_cur.draussen is not none %}Draußen sind es {{ ns_cur.draussen }} Grad. {% endif %}
@@ -114,7 +145,7 @@ tts_wetterbericht:
         {%- if nacht_min is not none %}In der Nacht kühlt es auf {{ nacht_min }} Grad ab. {% endif %}
         {%- if regen_nacht > 1 %}Kommende Nacht gibt es rund {{ regen_nacht }} Liter Regen pro Quadratmeter. {% elif ns_r.nacht > 0 %}Kommende Nacht gibt es etwas Regen. {% else %}Die Nacht bleibt trocken. {% endif %}
         {%- endif %}
-        {{ Tag }} wird es bis zu {{ max_temp }} Grad warm, am wärmsten gegen {{ max_uhrzeit }}. {{ temp_verlauf }}
+        {{ kiga_text }}{{ Tag }} wird es bis zu {{ max_temp }} Grad warm, am wärmsten gegen {{ max_uhrzeit }}. {{ temp_verlauf }}
         {% if regen_tag > 1 %}{{ Tag }} ist mit rund {{ regen_tag }} Litern Regen pro Quadratmeter zu rechnen.
         {%- elif ns_r.tag > 0 %}{{ Tag }} ist mit leichtem Regen von etwa einem Liter pro Quadratmeter zu rechnen.
         {%- else %}{{ Tag }} bleibt es tagsüber trocken.{% endif %}
