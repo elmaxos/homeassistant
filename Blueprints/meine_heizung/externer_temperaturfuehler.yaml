@@ -1,0 +1,117 @@
+blueprint:
+  name: Thermostat mit externem Raumthermometer (SONOFF TRVZB)
+  description: >-
+    Schickt die Temperatur eines Raumthermometers an ein SONOFF TRVZB (external_temperature_input)
+    und stellt das Thermostat auf den externen Fühler (remote_temperature). Der Wert wird bei jeder
+    Änderung und zusätzlich alle 15 Minuten neu gesendet.
+    Fallback: Liefert das Thermometer keinen Zahlenwert oder hat es sich länger als die eingestellte
+    Zeit nicht gemeldet, schaltet das Thermostat auf seinen eingebauten Fühler (local_temperature)
+    und es erscheint eine Benachrichtigung. Sobald wieder frische Werte kommen, geht es automatisch
+    zurück auf das Raumthermometer.
+  domain: automation
+  input:
+    thermometer:
+      name: Raumthermometer
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+              device_class: temperature
+    externe_temperatur:
+      name: Externe Temperatur des Thermostats
+      description: number.<thermostat>_external_temperature_input
+      selector:
+        entity:
+          filter:
+            - domain: number
+    fuehler_auswahl:
+      name: Fühlerauswahl des Thermostats
+      description: select.<thermostat>_temperature_sensor_select
+      selector:
+        entity:
+          filter:
+            - domain: select
+    max_alter:
+      name: Maximales Alter des Thermometerwerts
+      description: Ältere Werte gelten als ausgefallen (Fallback auf den eingebauten Fühler).
+      default: 240
+      selector:
+        number:
+          min: 15
+          max: 1440
+          step: 15
+          unit_of_measurement: min
+          mode: box
+    raumname:
+      name: Raumname (für die Benachrichtigung)
+      default: ""
+      selector:
+        text: {}
+
+triggers:
+  - trigger: state
+    entity_id: !input thermometer
+  - trigger: time_pattern
+    minutes: /15
+  - trigger: homeassistant
+    event: start
+
+variables:
+  thermometer: !input thermometer
+  extern: !input externe_temperatur
+  auswahl: !input fuehler_auswahl
+  max_alter: !input max_alter
+  raumname: !input raumname
+  wert: "{{ states(thermometer) }}"
+  alter_min: >-
+    {% set s = expand(thermometer) | first %}
+    {{ ((now() - s.last_reported).total_seconds() / 60) | round(0) | int if s else 99999 }}
+  gueltig: "{{ wert | is_number and (alter_min | int(99999)) <= (max_alter | int(240)) }}"
+  notify_id: "{{ 'heizung_fallback_' ~ auswahl.split('.')[1] }}"
+
+actions:
+  - if:
+      - condition: template
+        value_template: "{{ gueltig }}"
+    then:
+      - action: number.set_value
+        continue_on_error: true
+        target:
+          entity_id: "{{ extern }}"
+        data:
+          value: "{{ wert | float | round(1) }}"
+      - if:
+          - condition: template
+            value_template: "{{ states(auswahl) not in ['remote_temperature', 'unavailable', 'unknown'] }}"
+        then:
+          - action: select.select_option
+            continue_on_error: true
+            target:
+              entity_id: "{{ auswahl }}"
+            data:
+              option: remote_temperature
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: "{{ notify_id }}"
+    else:
+      - if:
+          - condition: template
+            value_template: "{{ states(auswahl) not in ['local_temperature', 'unavailable', 'unknown'] }}"
+        then:
+          - action: select.select_option
+            continue_on_error: true
+            target:
+              entity_id: "{{ auswahl }}"
+            data:
+              option: local_temperature
+          - action: persistent_notification.create
+            data:
+              notification_id: "{{ notify_id }}"
+              title: "Heizung {{ raumname }}: eingebauter Fühler"
+              message: >-
+                {{ thermometer }} liefert keinen gültigen Wert (Stand: {{ wert }}, zuletzt vor {{ alter_min }} min).
+                Das Thermostat regelt bis auf Weiteres mit seinem eingebauten Fühler.
+
+mode: queued
+max: 3
+max_exceeded: silent

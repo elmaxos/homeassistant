@@ -1,0 +1,92 @@
+- id: '1773573476032'
+  alias: Heizung extern set temp
+  description: Übergibt den externen Temperaturwert an das Thermostat
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.az_son_thermo_temperature
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: select.az_son_heizung_temperature_sensor_select
+      state:
+      - internal
+    then:
+    - action: select.select_option
+      metadata: {}
+      target:
+        entity_id: select.az_son_heizung_temperature_sensor_select
+      data:
+        option: external
+  - action: number.set_value
+    target:
+      entity_id: number.az_son_heizung_external_temperature_input
+    data:
+      value: '{{ states(''sensor.az_son_thermo_temperature'') | float(0) }}'
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - action: number.set_value
+    target:
+      entity_id: number.az_son_heizung_external_temperature_input
+    data:
+      value: '{{ states(''sensor.az_son_heizung_local_temperature'') | float(0) }}'
+  mode: restart
+- id: heizung_extern_wz
+  alias: 'Heizung Wohnzimmer: Raumthermometer ans Thermostat'
+  description: Blueprint meine_heizung/externer_temperaturfuehler.yaml
+  use_blueprint:
+    path: meine_heizung/externer_temperaturfuehler.yaml
+    input:
+      thermometer: sensor.wz_son_thermo_temperature
+      externe_temperatur: number.wz_son_thermostat_external_temperature_input
+      fuehler_auswahl: select.wz_son_thermostat_temperature_sensor_select
+      max_alter: 240
+      raumname: Wohnzimmer
+- id: heizung_extern_az
+  alias: 'Heizung Arbeitszimmer: Raumthermometer ans Thermostat'
+  description: Blueprint meine_heizung/externer_temperaturfuehler.yaml
+  use_blueprint:
+    path: meine_heizung/externer_temperaturfuehler.yaml
+    input:
+      thermometer: sensor.az_son_thermo_temperature
+      externe_temperatur: number.az_son_heizung_external_temperature_input
+      fuehler_auswahl: select.az_son_heizung_temperature_sensor_select
+      max_alter: 240
+      raumname: Arbeitszimmer
+- id: heizung_extern_bd
+  alias: 'Heizung Bad: Raumthermometer ans Thermostat'
+  description: Blueprint meine_heizung/externer_temperaturfuehler.yaml
+  use_blueprint:
+    path: meine_heizung/externer_temperaturfuehler.yaml
+    input:
+      thermometer: sensor.bd_son_thermo_temperature
+      externe_temperatur: number.bd_son_heizung_external_temperature_input
+      fuehler_auswahl: select.bd_son_heizung_temperature_sensor_select
+      max_alter: 240
+      raumname: Bad
+- id: heizung_extern_sz
+  alias: 'Heizung Schlafzimmer: Raumthermometer ans Thermostat'
+  description: Blueprint meine_heizung/externer_temperaturfuehler.yaml
+  use_blueprint:
+    path: meine_heizung/externer_temperaturfuehler.yaml
+    input:
+      thermometer: sensor.sz_alp_bett_temperatur
+      externe_temperatur: number.sz_son_thermostat_external_temperature_input
+      fuehler_auswahl: select.sz_son_thermostat_temperature_sensor_select
+      max_alter: 240
+      raumname: Schlafzimmer
+- id: heizung_extern_ez
+  alias: 'Heizung Esszimmer: Raumthermometer ans Thermostat'
+  description: Blueprint meine_heizung/externer_temperaturfuehler.yaml
+  use_blueprint:
+    path: meine_heizung/externer_temperaturfuehler.yaml
+    input:
+      thermometer: sensor.meter_plus_3986_temperatur
+      externe_temperatur: number.ez_son_thermostat_external_temperature_input
+      fuehler_auswahl: select.ez_son_thermostat_temperature_sensor_select
+      max_alter: 240
+      raumname: Esszimmer

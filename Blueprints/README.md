@@ -18,3 +18,7 @@ Benutzt von: `BILBUT_WZ_Tuer` (Wohnzimmer-Tür: Licht, Beamer/Monitor, Zeitansag
 |---|---|---|---|
 | oben (1) | kleine Lampe (`switch.ins_kleine_lampe`) | Schwibbogen (`switch.wz_ins_schwibbogen`) | Beamer: Steckdose `switch.az_ins_monitor` aus → an, nach 65 s Jellyfin auf `media_player.fire_tv_4k`; an → Fire TV aus, nach 10 s Steckdose aus |
 | unten (2) | Zeitansage (`script.tts_zeitansage`) | Tesla-Status (`script.tts_tesla_statusansage`) | Wetterbericht (`script.tts_wetterbericht`) |
+
+## meine_heizung/externer_temperaturfuehler.yaml
+
+Raumthermometer → SONOFF TRVZB (externer Fühler) mit Fallback auf den eingebauten Fühler. Details in [../Heizung/README.md](../Heizung/README.md).
