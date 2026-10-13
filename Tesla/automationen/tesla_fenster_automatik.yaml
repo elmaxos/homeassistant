@@ -44,8 +44,7 @@
         - action: cover.close_cover
           target:
             entity_id: cover.fky_fenster
-        - &id001
-          condition: state
+        - condition: state
           entity_id: device_tracker.fky_standort
           state: home
         - action: script.tts_cam_sound_text
@@ -56,7 +55,9 @@
             message: Achtung, {{ 'es schneit' if trigger.to_state.state == 'Snow' else 'es regnet' }}. Tesla Fenster werden
               geschlossen.
         else:
-        - *id001
+        - condition: state
+          entity_id: device_tracker.fky_standort
+          state: home
         - action: script.tts_cam_sound_text
           data:
             kameras:
@@ -82,7 +83,9 @@
       - action: cover.open_cover
         target:
           entity_id: cover.fky_fenster
-      - *id001
+      - condition: state
+        entity_id: device_tracker.fky_standort
+        state: home
       - action: script.tts_cam_sound_text
         data:
           kameras:
@@ -103,7 +106,9 @@
       - action: cover.close_cover
         target:
           entity_id: cover.fky_fenster
-      - *id001
+      - condition: state
+        entity_id: device_tracker.fky_standort
+        state: home
       - action: script.tts_cam_sound_text
         data:
           kameras:
@@ -123,7 +128,9 @@
       - action: cover.close_cover
         target:
           entity_id: cover.fky_fenster
-      - *id001
+      - condition: state
+        entity_id: device_tracker.fky_standort
+        state: home
       - action: script.tts_cam_sound_text
         data:
           kameras:

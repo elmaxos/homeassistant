@@ -1,0 +1,55 @@
+- id: '1790280920424'
+  alias: BILBUT_AZ_Tuer
+  description: 'Oben: Licht an (einfach), PC-Steckdose an (lang). Unten: Licht aus (einfach), PC-Steckdose aus (lang).'
+  use_blueprint:
+    path: meine_ikea/bilrease_dual_button.yaml
+    input:
+      taste_1: event.arbeitszimmer_bilbut_az_tuer_taste_1
+      taste_2: event.arbeitszimmer_bilbut_az_tuer_taste_2
+      t1_einfach:
+      - if:
+        - condition: template
+          value_template: '{{ states.scene | selectattr(''entity_id'', ''eq'', ''scene.arbeitszimmer_vorher'') | list | count
+            > 0 }}'
+        then:
+        - action: scene.turn_on
+          target:
+            entity_id: scene.arbeitszimmer_vorher
+        else:
+        - action: light.turn_on
+          target:
+            entity_id:
+            - light.kajplats_gu10_ws_575lm
+            - light.kajplats_gu10_ws_575lm_2
+            - light.kajplats_gu10_ws_575lm_3
+      t2_einfach:
+      - if:
+        - condition: state
+          entity_id:
+          - light.kajplats_gu10_ws_575lm
+          - light.kajplats_gu10_ws_575lm_2
+          - light.kajplats_gu10_ws_575lm_3
+          match: any
+          state: 'on'
+        then:
+        - action: scene.create
+          data:
+            scene_id: arbeitszimmer_vorher
+            snapshot_entities:
+            - light.kajplats_gu10_ws_575lm
+            - light.kajplats_gu10_ws_575lm_2
+            - light.kajplats_gu10_ws_575lm_3
+      - action: light.turn_off
+        target:
+          entity_id:
+          - light.kajplats_gu10_ws_575lm
+          - light.kajplats_gu10_ws_575lm_2
+          - light.kajplats_gu10_ws_575lm_3
+      t1_lang:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.az_ins_schreibtisch_ba_2
+      t2_lang:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.az_ins_schreibtisch_ba_2
