@@ -1,0 +1,187 @@
+# Heizungs-Anzeige auf dem Grundriss (Testdashboard, Tab Heizung)
+# Je Raum: heizt gerade (hvac_action), Heizanteil der letzten Stunde, Stufe fuer die Raumfarbe.
+template:
+  - binary_sensor:
+      - name: Heizung WZ heizt
+        unique_id: heizung_wz_heizt
+        device_class: heat
+        state: "{{ state_attr('climate.wz_son_thermostat', 'hvac_action') == 'heating' }}"
+        availability: "{{ states('climate.wz_son_thermostat') not in ['unavailable', 'unknown'] }}"
+      - name: Heizung EZ heizt
+        unique_id: heizung_ez_heizt
+        device_class: heat
+        state: "{{ state_attr('climate.ez_son_thermostat', 'hvac_action') == 'heating' }}"
+        availability: "{{ states('climate.ez_son_thermostat') not in ['unavailable', 'unknown'] }}"
+      - name: Heizung BD heizt
+        unique_id: heizung_bd_heizt
+        device_class: heat
+        state: "{{ state_attr('climate.bd_son_heizung', 'hvac_action') == 'heating' }}"
+        availability: "{{ states('climate.bd_son_heizung') not in ['unavailable', 'unknown'] }}"
+      - name: Heizung AZ heizt
+        unique_id: heizung_az_heizt
+        device_class: heat
+        state: "{{ state_attr('climate.az_son_heizung', 'hvac_action') == 'heating' }}"
+        availability: "{{ states('climate.az_son_heizung') not in ['unavailable', 'unknown'] }}"
+      - name: Heizung SZ heizt
+        unique_id: heizung_sz_heizt
+        device_class: heat
+        state: "{{ state_attr('climate.sz_son_thermostat', 'hvac_action') == 'heating' }}"
+        availability: "{{ states('climate.sz_son_thermostat') not in ['unavailable', 'unknown'] }}"
+  - sensor:
+      - name: Heizung WZ Stufe
+        unique_id: heizung_wz_stufe
+        icon: mdi:radiator
+        state: >-
+          {% set c = 'climate.wz_son_thermostat' %}
+          {% set s = states(c) %}
+          {% if s in ['unavailable', 'unknown'] %}offline
+          {% elif s == 'off' %}aus
+          {% elif state_attr(c, 'hvac_action') != 'heating' %}bereit
+          {% else %}{% set a = states('sensor.heizung_wz_heizanteil') | float(0) %}
+          {{ 'stark' if a >= 66 else ('mittel' if a >= 33 else 'leicht') }}{% endif %}
+        attributes:
+          anzeige: >-
+            {% set c = 'climate.wz_son_thermostat' %}
+            {% set ist = state_attr(c, 'current_temperature') %}
+            {% set soll = state_attr(c, 'temperature') %}
+            {% set f = '%.1f' %}
+            {% if states(c) in ['unavailable', 'unknown'] %}offline
+            {% elif ist is none %}–
+            {% elif states(c) == 'off' %}{{ (f | format(ist)) | replace('.', ',') }}° · aus
+            {% else %}{{ (f | format(ist)) | replace('.', ',') }}° → {{ (f | format(soll)) | replace('.', ',') }}°{% endif %}
+          heizanteil: "{{ states('sensor.heizung_wz_heizanteil') | float(0) | round(0) }}"
+      - name: Heizung EZ Stufe
+        unique_id: heizung_ez_stufe
+        icon: mdi:radiator
+        state: >-
+          {% set c = 'climate.ez_son_thermostat' %}
+          {% set s = states(c) %}
+          {% if s in ['unavailable', 'unknown'] %}offline
+          {% elif s == 'off' %}aus
+          {% elif state_attr(c, 'hvac_action') != 'heating' %}bereit
+          {% else %}{% set a = states('sensor.heizung_ez_heizanteil') | float(0) %}
+          {{ 'stark' if a >= 66 else ('mittel' if a >= 33 else 'leicht') }}{% endif %}
+        attributes:
+          anzeige: >-
+            {% set c = 'climate.ez_son_thermostat' %}
+            {% set ist = state_attr(c, 'current_temperature') %}
+            {% set soll = state_attr(c, 'temperature') %}
+            {% set f = '%.1f' %}
+            {% if states(c) in ['unavailable', 'unknown'] %}offline
+            {% elif ist is none %}–
+            {% elif states(c) == 'off' %}{{ (f | format(ist)) | replace('.', ',') }}° · aus
+            {% else %}{{ (f | format(ist)) | replace('.', ',') }}° → {{ (f | format(soll)) | replace('.', ',') }}°{% endif %}
+          heizanteil: "{{ states('sensor.heizung_ez_heizanteil') | float(0) | round(0) }}"
+      - name: Heizung BD Stufe
+        unique_id: heizung_bd_stufe
+        icon: mdi:radiator
+        state: >-
+          {% set c = 'climate.bd_son_heizung' %}
+          {% set s = states(c) %}
+          {% if s in ['unavailable', 'unknown'] %}offline
+          {% elif s == 'off' %}aus
+          {% elif state_attr(c, 'hvac_action') != 'heating' %}bereit
+          {% else %}{% set a = states('sensor.heizung_bd_heizanteil') | float(0) %}
+          {{ 'stark' if a >= 66 else ('mittel' if a >= 33 else 'leicht') }}{% endif %}
+        attributes:
+          anzeige: >-
+            {% set c = 'climate.bd_son_heizung' %}
+            {% set ist = state_attr(c, 'current_temperature') %}
+            {% set soll = state_attr(c, 'temperature') %}
+            {% set f = '%.1f' %}
+            {% if states(c) in ['unavailable', 'unknown'] %}offline
+            {% elif ist is none %}–
+            {% elif states(c) == 'off' %}{{ (f | format(ist)) | replace('.', ',') }}° · aus
+            {% else %}{{ (f | format(ist)) | replace('.', ',') }}° → {{ (f | format(soll)) | replace('.', ',') }}°{% endif %}
+          heizanteil: "{{ states('sensor.heizung_bd_heizanteil') | float(0) | round(0) }}"
+      - name: Heizung AZ Stufe
+        unique_id: heizung_az_stufe
+        icon: mdi:radiator
+        state: >-
+          {% set c = 'climate.az_son_heizung' %}
+          {% set s = states(c) %}
+          {% if s in ['unavailable', 'unknown'] %}offline
+          {% elif s == 'off' %}aus
+          {% elif state_attr(c, 'hvac_action') != 'heating' %}bereit
+          {% else %}{% set a = states('sensor.heizung_az_heizanteil') | float(0) %}
+          {{ 'stark' if a >= 66 else ('mittel' if a >= 33 else 'leicht') }}{% endif %}
+        attributes:
+          anzeige: >-
+            {% set c = 'climate.az_son_heizung' %}
+            {% set ist = state_attr(c, 'current_temperature') %}
+            {% set soll = state_attr(c, 'temperature') %}
+            {% set f = '%.1f' %}
+            {% if states(c) in ['unavailable', 'unknown'] %}offline
+            {% elif ist is none %}–
+            {% elif states(c) == 'off' %}{{ (f | format(ist)) | replace('.', ',') }}° · aus
+            {% else %}{{ (f | format(ist)) | replace('.', ',') }}° → {{ (f | format(soll)) | replace('.', ',') }}°{% endif %}
+          heizanteil: "{{ states('sensor.heizung_az_heizanteil') | float(0) | round(0) }}"
+      - name: Heizung SZ Stufe
+        unique_id: heizung_sz_stufe
+        icon: mdi:radiator
+        state: >-
+          {% set c = 'climate.sz_son_thermostat' %}
+          {% set s = states(c) %}
+          {% if s in ['unavailable', 'unknown'] %}offline
+          {% elif s == 'off' %}aus
+          {% elif state_attr(c, 'hvac_action') != 'heating' %}bereit
+          {% else %}{% set a = states('sensor.heizung_sz_heizanteil') | float(0) %}
+          {{ 'stark' if a >= 66 else ('mittel' if a >= 33 else 'leicht') }}{% endif %}
+        attributes:
+          anzeige: >-
+            {% set c = 'climate.sz_son_thermostat' %}
+            {% set ist = state_attr(c, 'current_temperature') %}
+            {% set soll = state_attr(c, 'temperature') %}
+            {% set f = '%.1f' %}
+            {% if states(c) in ['unavailable', 'unknown'] %}offline
+            {% elif ist is none %}–
+            {% elif states(c) == 'off' %}{{ (f | format(ist)) | replace('.', ',') }}° · aus
+            {% else %}{{ (f | format(ist)) | replace('.', ',') }}° → {{ (f | format(soll)) | replace('.', ',') }}°{% endif %}
+          heizanteil: "{{ states('sensor.heizung_sz_heizanteil') | float(0) | round(0) }}"
+
+sensor:
+  - platform: history_stats
+    name: Heizung WZ Heizanteil
+    unique_id: heizung_wz_heizanteil
+    entity_id: binary_sensor.heizung_wz_heizt
+    state: "on"
+    type: ratio
+    end: "{{ now() }}"
+    duration:
+      hours: 1
+  - platform: history_stats
+    name: Heizung EZ Heizanteil
+    unique_id: heizung_ez_heizanteil
+    entity_id: binary_sensor.heizung_ez_heizt
+    state: "on"
+    type: ratio
+    end: "{{ now() }}"
+    duration:
+      hours: 1
+  - platform: history_stats
+    name: Heizung BD Heizanteil
+    unique_id: heizung_bd_heizanteil
+    entity_id: binary_sensor.heizung_bd_heizt
+    state: "on"
+    type: ratio
+    end: "{{ now() }}"
+    duration:
+      hours: 1
+  - platform: history_stats
+    name: Heizung AZ Heizanteil
+    unique_id: heizung_az_heizanteil
+    entity_id: binary_sensor.heizung_az_heizt
+    state: "on"
+    type: ratio
+    end: "{{ now() }}"
+    duration:
+      hours: 1
+  - platform: history_stats
+    name: Heizung SZ Heizanteil
+    unique_id: heizung_sz_heizanteil
+    entity_id: binary_sensor.heizung_sz_heizt
+    state: "on"
+    type: ratio
+    end: "{{ now() }}"
+    duration:
+      hours: 1

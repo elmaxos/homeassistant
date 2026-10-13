@@ -1,0 +1,346 @@
+type: sections
+title: Heizung
+path: heizung
+icon: mdi:radiator
+max_columns: 2
+sections:
+- type: grid
+  cards:
+  - type: heading
+    heading: Erdgeschoss
+    heading_style: title
+  - type: picture-elements
+    image:
+      media_content_id: media-source://image_upload/c6418232873ff0dd1596abffac70aab7
+      media_content_type: image/png
+      metadata:
+        title: burlafingen2.png
+        thumbnail: /api/image/serve/c6418232873ff0dd1596abffac70aab7/256x256
+        media_class: image
+    elements:
+    - type: image
+      entity: sensor.heizung_wz_stufe
+      image: /local/heizung/wz_aus.png?v=1
+      state_image:
+        offline: /local/heizung/wz_offline.png?v=1
+        aus: /local/heizung/wz_aus.png?v=1
+        bereit: /local/heizung/wz_bereit.png?v=1
+        leicht: /local/heizung/wz_leicht.png?v=1
+        mittel: /local/heizung/wz_mittel.png?v=1
+        stark: /local/heizung/wz_stark.png?v=1
+      tap_action:
+        action: more-info
+        entity: climate.wz_son_thermostat
+      hold_action:
+        action: more-info
+        entity: climate.wz_son_thermostat
+      style:
+        left: 41.76%
+        top: 65.77%
+        width: 32.18%
+    - type: state-label
+      entity: sensor.heizung_wz_stufe
+      attribute: anzeige
+      tap_action:
+        action: more-info
+        entity: climate.wz_son_thermostat
+      style:
+        left: 40.86%
+        top: 69.78%
+        color: '#222'
+        font-weight: '600'
+        white-space: nowrap
+        font-size: clamp(9px, 1.3vw, 15px)
+        background: rgba(255,255,255,0.55)
+        border-radius: 6px
+        padding: 1px 5px
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.heizung_wz_heizt
+        state: 'on'
+      elements:
+      - type: icon
+        icon: mdi:fire
+        tap_action:
+          action: more-info
+          entity: climate.wz_son_thermostat
+        style:
+          left: 40.86%
+          top: 62.78%
+          color: '#ff5a1f'
+          --mdc-icon-size: clamp(16px, 2.2vw, 28px)
+    - type: image
+      entity: sensor.heizung_ez_stufe
+      image: /local/heizung/ez_aus.png?v=1
+      state_image:
+        offline: /local/heizung/ez_offline.png?v=1
+        aus: /local/heizung/ez_aus.png?v=1
+        bereit: /local/heizung/ez_bereit.png?v=1
+        leicht: /local/heizung/ez_leicht.png?v=1
+        mittel: /local/heizung/ez_mittel.png?v=1
+        stark: /local/heizung/ez_stark.png?v=1
+      tap_action:
+        action: more-info
+        entity: climate.ez_son_thermostat
+      hold_action:
+        action: more-info
+        entity: climate.ez_son_thermostat
+      style:
+        left: 72.41%
+        top: 64.62%
+        width: 26.05%
+    - type: state-label
+      entity: sensor.heizung_ez_stufe
+      attribute: anzeige
+      tap_action:
+        action: more-info
+        entity: climate.ez_son_thermostat
+      style:
+        left: 72.77%
+        top: 68.91%
+        color: '#222'
+        font-weight: '600'
+        white-space: nowrap
+        font-size: clamp(9px, 1.3vw, 15px)
+        background: rgba(255,255,255,0.55)
+        border-radius: 6px
+        padding: 1px 5px
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.heizung_ez_heizt
+        state: 'on'
+      elements:
+      - type: icon
+        icon: mdi:fire
+        tap_action:
+          action: more-info
+          entity: climate.ez_son_thermostat
+        style:
+          left: 72.77%
+          top: 61.91%
+          color: '#ff5a1f'
+          --mdc-icon-size: clamp(16px, 2.2vw, 28px)
+    - type: image
+      entity: sensor.heizung_bd_stufe
+      image: /local/heizung/bd_aus.png?v=1
+      state_image:
+        offline: /local/heizung/bd_offline.png?v=1
+        aus: /local/heizung/bd_aus.png?v=1
+        bereit: /local/heizung/bd_bereit.png?v=1
+        leicht: /local/heizung/bd_leicht.png?v=1
+        mittel: /local/heizung/bd_mittel.png?v=1
+        stark: /local/heizung/bd_stark.png?v=1
+      tap_action:
+        action: more-info
+        entity: climate.bd_son_heizung
+      hold_action:
+        action: more-info
+        entity: climate.bd_son_heizung
+      style:
+        left: 71.07%
+        top: 25.0%
+        width: 14.18%
+    - type: state-label
+      entity: sensor.heizung_bd_stufe
+      attribute: anzeige
+      tap_action:
+        action: more-info
+        entity: climate.bd_son_heizung
+      style:
+        left: 71.59%
+        top: 28.59%
+        color: '#222'
+        font-weight: '600'
+        white-space: nowrap
+        font-size: clamp(9px, 1.3vw, 15px)
+        background: rgba(255,255,255,0.55)
+        border-radius: 6px
+        padding: 1px 5px
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.heizung_bd_heizt
+        state: 'on'
+      elements:
+      - type: icon
+        icon: mdi:fire
+        tap_action:
+          action: more-info
+          entity: climate.bd_son_heizung
+        style:
+          left: 71.59%
+          top: 21.59%
+          color: '#ff5a1f'
+          --mdc-icon-size: clamp(16px, 2.2vw, 28px)
+- type: grid
+  cards:
+  - type: heading
+    heading: Obergeschoss
+    heading_style: title
+  - type: picture-elements
+    image:
+      media_content_id: media-source://image_upload/970f46084326b2c5e558adef1cf0cb81
+      media_content_type: image/png
+      metadata:
+        title: burlafingen3OG.png
+        thumbnail: /api/image/serve/970f46084326b2c5e558adef1cf0cb81/256x256
+        media_class: image
+    elements:
+    - type: image
+      entity: sensor.heizung_az_stufe
+      image: /local/heizung/az_aus.png?v=1
+      state_image:
+        offline: /local/heizung/az_offline.png?v=1
+        aus: /local/heizung/az_aus.png?v=1
+        bereit: /local/heizung/az_bereit.png?v=1
+        leicht: /local/heizung/az_leicht.png?v=1
+        mittel: /local/heizung/az_mittel.png?v=1
+        stark: /local/heizung/az_stark.png?v=1
+      tap_action:
+        action: more-info
+        entity: climate.az_son_heizung
+      hold_action:
+        action: more-info
+        entity: climate.az_son_heizung
+      style:
+        left: 41.54%
+        top: 44.07%
+        width: 32.64%
+    - type: state-label
+      entity: sensor.heizung_az_stufe
+      attribute: anzeige
+      tap_action:
+        action: more-info
+        entity: climate.az_son_heizung
+      style:
+        left: 42.39%
+        top: 48.28%
+        color: '#222'
+        font-weight: '600'
+        white-space: nowrap
+        font-size: clamp(9px, 1.3vw, 15px)
+        background: rgba(255,255,255,0.55)
+        border-radius: 6px
+        padding: 1px 5px
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.heizung_az_heizt
+        state: 'on'
+      elements:
+      - type: icon
+        icon: mdi:fire
+        tap_action:
+          action: more-info
+          entity: climate.az_son_heizung
+        style:
+          left: 42.39%
+          top: 41.28%
+          color: '#ff5a1f'
+          --mdc-icon-size: clamp(16px, 2.2vw, 28px)
+    - type: image
+      entity: sensor.heizung_sz_stufe
+      image: /local/heizung/sz_aus.png?v=1
+      state_image:
+        offline: /local/heizung/sz_offline.png?v=1
+        aus: /local/heizung/sz_aus.png?v=1
+        bereit: /local/heizung/sz_bereit.png?v=1
+        leicht: /local/heizung/sz_leicht.png?v=1
+        mittel: /local/heizung/sz_mittel.png?v=1
+        stark: /local/heizung/sz_stark.png?v=1
+      tap_action:
+        action: more-info
+        entity: climate.sz_son_thermostat
+      hold_action:
+        action: more-info
+        entity: climate.sz_son_thermostat
+      style:
+        left: 57.27%
+        top: 25.0%
+        width: 42.14%
+    - type: state-label
+      entity: sensor.heizung_sz_stufe
+      attribute: anzeige
+      tap_action:
+        action: more-info
+        entity: climate.sz_son_thermostat
+      style:
+        left: 57.33%
+        top: 28.66%
+        color: '#222'
+        font-weight: '600'
+        white-space: nowrap
+        font-size: clamp(9px, 1.3vw, 15px)
+        background: rgba(255,255,255,0.55)
+        border-radius: 6px
+        padding: 1px 5px
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.heizung_sz_heizt
+        state: 'on'
+      elements:
+      - type: icon
+        icon: mdi:fire
+        tap_action:
+          action: more-info
+          entity: climate.sz_son_thermostat
+        style:
+          left: 57.33%
+          top: 21.66%
+          color: '#ff5a1f'
+          --mdc-icon-size: clamp(16px, 2.2vw, 28px)
+- type: grid
+  column_span: 2
+  cards:
+  - type: markdown
+    content: '**Raumfarbe** &nbsp; <font color=''#e63214''>■</font> heizt stark (≥ 66 % der letzten Stunde) &nbsp; <font color=''#ff821e''>■</font>
+      mittel &nbsp; <font color=''#ffbe46''>■</font> leicht &nbsp; <font color=''#468ce6''>■</font> Ziel erreicht &nbsp; <font
+      color=''#969696''>■</font> aus / offline
+
+
+      Raum antippen öffnet den Thermostat.'
+    grid_options:
+      columns: full
+  - type: tile
+    entity: climate.wz_son_thermostat
+    name: Wohnzimmer
+    vertical: false
+    features:
+    - type: target-temperature
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: climate.ez_son_thermostat
+    name: Esszimmer
+    vertical: false
+    features:
+    - type: target-temperature
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: climate.bd_son_heizung
+    name: Bad
+    vertical: false
+    features:
+    - type: target-temperature
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: climate.az_son_heizung
+    name: Arbeitszimmer
+    vertical: false
+    features:
+    - type: target-temperature
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: climate.sz_son_thermostat
+    name: Schlafzimmer
+    vertical: false
+    features:
+    - type: target-temperature
+    grid_options:
+      columns: 6
