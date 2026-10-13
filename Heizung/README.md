@@ -3,8 +3,9 @@
 Tab `Heizung` im Testdashboard (`/dashboard-testdashboard/heizung`). Er nutzt die beiden hochgeladenen Grundrisse
 (`burlafingen2.png` = Erdgeschoss, `burlafingen3OG.png` = Obergeschoss). Jeder Raum mit Thermostat wird je nach
 Heizzustand eingefärbt. Im Raum steht „Ist → Soll“, eine Flamme erscheint, solange das Thermostat heizt.
-Ein Tipp auf den Raum öffnet den Thermostat. Unter den Plänen: **Alle aus** (`climate.turn_off`) und **Alle 16 °C**
-(`climate.set_temperature` 16 °C + `hvac_mode: heat`), beide mit Rückfrage.
+Ein Tipp auf den Raum öffnet den Thermostat. Über den Thermostat-Kacheln stehen in der Überschrift „Thermostate“ zwei
+kleine Knöpfe: **Alle aus** (`script.heizung_alle_aus`) und **Alle 16 °C** (`script.heizung_alle_16`, Heizen mit 16 °C),
+beide mit Rückfrage. Scripts: [scripts/heizung_alle.yaml](scripts/heizung_alle.yaml) (an `/config/scripts.yaml` anhängen).
 
 | Farbe | Stufe (`sensor.heizung_<raum>_stufe`) | Bedeutung |
 |---|---|---|

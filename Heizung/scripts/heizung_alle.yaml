@@ -1,0 +1,31 @@
+heizung_alle_aus:
+  alias: Alle aus
+  description: Schaltet alle Heizungsthermostate aus (Heizung-Tab im Testdashboard).
+  icon: mdi:radiator-off
+  sequence:
+  - action: climate.turn_off
+    target:
+      entity_id:
+      - climate.wz_son_thermostat
+      - climate.ez_son_thermostat
+      - climate.bd_son_heizung
+      - climate.az_son_heizung
+      - climate.sz_son_thermostat
+  mode: single
+heizung_alle_16:
+  alias: Alle 16 °C
+  description: Stellt alle Heizungsthermostate auf Heizen mit 16 °C (Heizung-Tab im Testdashboard).
+  icon: mdi:thermometer-chevron-down
+  sequence:
+  - action: climate.set_temperature
+    target:
+      entity_id:
+      - climate.wz_son_thermostat
+      - climate.ez_son_thermostat
+      - climate.bd_son_heizung
+      - climate.az_son_heizung
+      - climate.sz_son_thermostat
+    data:
+      temperature: 16
+      hvac_mode: heat
+  mode: single

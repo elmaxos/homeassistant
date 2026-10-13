@@ -173,17 +173,15 @@ VIEW = {
         {"type": "grid", "cards": [{"type": "heading", "heading": "Obergeschoss", "heading_style": "title"}, plan_card("og")]},
         {"type": "grid", "column_span": 2, "cards": [
             {"type": "markdown", "content": legend, "grid_options": {"columns": "full"}},
-            {"type": "button", "name": "Alle aus", "icon": "mdi:radiator-off", "show_state": False,
-             "tap_action": {"action": "perform-action", "perform_action": "climate.turn_off",
-                            "target": {"entity_id": [g["climate"] for g in geo.values()]},
-                            "confirmation": {"text": "Alle Thermostate ausschalten?"}},
-             "grid_options": {"columns": 6, "rows": 1}},
-            {"type": "button", "name": "Alle 16 °C", "icon": "mdi:thermometer-chevron-down", "show_state": False,
-             "tap_action": {"action": "perform-action", "perform_action": "climate.set_temperature",
-                            "target": {"entity_id": [g["climate"] for g in geo.values()]},
-                            "data": {"temperature": 16, "hvac_mode": "heat"},
-                            "confirmation": {"text": "Alle Thermostate auf Heizen mit 16 °C stellen?"}},
-             "grid_options": {"columns": 6, "rows": 1}},
+            {"type": "heading", "heading": "Thermostate", "heading_style": "subtitle", "icon": "mdi:radiator",
+             "entities": [
+                 {"entity": "script.heizung_alle_aus", "state_content": "name", "color": "blue-grey",
+                  "tap_action": {"action": "perform-action", "perform_action": "script.heizung_alle_aus",
+                                 "confirmation": {"text": "Alle Thermostate ausschalten?"}}},
+                 {"entity": "script.heizung_alle_16", "state_content": "name", "color": "deep-orange",
+                  "tap_action": {"action": "perform-action", "perform_action": "script.heizung_alle_16",
+                                 "confirmation": {"text": "Alle Thermostate auf Heizen mit 16 °C stellen?"}}},
+             ]},
         ] + [
             {"type": "tile", "entity": g["climate"], "name": g["name"], "vertical": False,
              "features": [{"type": "target-temperature"}], "grid_options": {"columns": 6}}
