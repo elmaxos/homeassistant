@@ -257,6 +257,6 @@ sits permanently in D state and adds ~1 to it).
 - The stock heartbeat (web UI status cache) forks ~12 helpers per run; at 1 s it costs ~35 % CPU. The installer sets it to 10 s.
   A firmware update restores the stock file.
 - Motion detection costs ~20 %; the installer leaves it off (HA switch *Motion Detection* turns it on).
-- Lower resolution does not reduce CPU (hardware encoder); it only halves WiFi traffic. 3684 runs 720p/1500 since then.
+- Lower resolution does not reduce CPU (hardware encoder); it only halves WiFi traffic. All cameras stay at 1080p/3000.
 - A viewer of the main stream costs only ~4–6 %.
 - HA discovery state loop: every 60 s (was 20 s).
