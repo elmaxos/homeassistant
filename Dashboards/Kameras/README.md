@@ -4,10 +4,10 @@ Tab `Kameras` (`/dashboard-testdashboard/kameras-ptz`): alle Thingino-Kameras in
 im Bild, umschalten mit den Pfeilen links/rechts im Bild oder über das Kamera-Symbol im Menü.
 Konfiguration: [view.yaml](view.yaml), erzeugt von [cams_view.py](cams_view.py) (Kameraliste oben im Skript).
 
-| Kamera | Host | IP | Kamera-Entity (Hauptstream) | Pfeile |
+| Kamera | Host | IP | Live (Substream) / HD über Substream-Symbol | Pfeile |
 |---|---|---|---|---|
-| Wohnzimmer | `ing-sonoff-pt2-3684` | .71 | `camera.sonoff_pt2_1_profile_0` | normal |
-| Schlafzimmer | `ing-sonoff-pt2-a574` | .74 | `camera.sonoff_pt2_3_profile_0` | vertauscht |
+| Wohnzimmer | `ing-sonoff-pt2-3684` | .71 | `camera.sonoff_pt2_1_profile_1` / `camera.sonoff_pt2_1_profile_0` | normal |
+| Schlafzimmer | `ing-sonoff-pt2-a574` | .74 | `camera.sonoff_kamera_3_profile_1` / `camera.sonoff_pt2_3_profile_0` | vertauscht |
 | Unterstand | `ing-sonoff-pt2-26a4` | .73 | `camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1` (Substream!) | vertauscht |
 | Kamera 4420 | `ing-sonoff-pt2-4420` | .72 | `camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2` | normal |
 
@@ -17,6 +17,10 @@ Für 4420 ist das aus der Flip-Einstellung abgeleitet und noch nicht ausprobiert
 
 Unterstand (26a4): Am Hauptstream ist das Video abgeschaltet (`switch.ing_sonoff_pt2_26a4_main_stream_video` aus),
 deshalb nutzt die Karte dort den Substream `profile_1` (640×360). Mit `profile_0` bleibt das Bild schwarz.
+
+Live läuft standardmäßig der Substream (weniger Last und WLAN). Den Hauptstream gibt es bei Wohnzimmer und
+Schlafzimmer als zweite Kamera mit `capabilities.disable_except: [substream]`, als Abhängigkeit (`dependencies`) eingetragen.
+Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
 
 ## Voraussetzung
 

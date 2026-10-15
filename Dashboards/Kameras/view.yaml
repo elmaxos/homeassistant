@@ -10,7 +10,10 @@ sections:
   - type: custom:advanced-camera-card
     cameras:
     - id: wohnzimmer
-      camera_entity: camera.sonoff_pt2_1_profile_0
+      camera_entity: camera.sonoff_pt2_1_profile_1
+      dependencies:
+        cameras:
+        - wohnzimmer_hd
       title: Wohnzimmer
       icon: mdi:sofa
       ptz:
@@ -52,7 +55,10 @@ sections:
             target:
               entity_id: button.ing_sonoff_pt2_3684_preset_0_load
     - id: schlafzimmer
-      camera_entity: camera.sonoff_pt2_3_profile_0
+      camera_entity: camera.sonoff_kamera_3_profile_1
+      dependencies:
+        cameras:
+        - schlafzimmer_hd
       title: Schlafzimmer
       icon: mdi:bed
       ptz:
@@ -162,6 +168,18 @@ sections:
             perform_action: button.press
             target:
               entity_id: button.ing_sonoff_pt2_4420_preset_1_load
+    - id: wohnzimmer_hd
+      camera_entity: camera.sonoff_pt2_1_profile_0
+      title: Wohnzimmer HD
+      capabilities:
+        disable_except:
+        - substream
+    - id: schlafzimmer_hd
+      camera_entity: camera.sonoff_pt2_3_profile_0
+      title: Schlafzimmer HD
+      capabilities:
+        disable_except:
+        - substream
     view:
       default: live
     live:
