@@ -83,7 +83,7 @@ cleanup_stale() {
 
 # ============================================
 # STATE SYNC: report changes made outside HA (WebUI, button, day/night automatic)
-# Runs in the background every 20 s and publishes only values that changed.
+# Runs in the background every 60 s and publishes only values that changed.
 # ============================================
 STATE_CACHE="/tmp/ha-state-cache"
 onoff() { case "$1" in 1 | true | on | ON) echo ON ;; *) echo OFF ;; esac; }
@@ -140,7 +140,7 @@ sync_state() {
 }
 state_loop() {
 	while :; do
-		sleep 20
+		sleep 60
 		sync_state
 	done
 }
@@ -582,7 +582,7 @@ fi
 rm -rf "$STATE_CACHE"
 ( state_loop ) >/dev/null 2>&1 </dev/null &
 echo $! > /run/ha-state.pid
-echo "State sync loop started (pid $(cat /run/ha-state.pid), every 20 s)"
+echo "State sync loop started (pid $(cat /run/ha-state.pid), every 60 s)"
 
 echo ""
 echo "HA discovery complete: all entities published for $HOST"

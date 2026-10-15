@@ -61,7 +61,7 @@ camera in Home Assistant with the ONVIF integration. This is independent of the 
    - copies your SSH key to the camera (if `ssh-copy-id` is available), so later steps need no password,
    - uploads the discovery script,
    - configures the MQTT subscriber (`<hostname>/cmd`, action `eval $MQTT_PAYLOAD`),
-   - configures motion events -> MQTT (`<hostname>/motion`) and enables motion detection,
+   - configures motion events -> MQTT (`<hostname>/motion`) and prepares motion detection (off by default, switch in HA),
    - disables the logo OSD, restarts prudynt and the MQTT subscriber,
    - installs `/etc/init.d/S99ha-discovery` (re-publishes discovery at boot, waits for the broker),
    - runs the discovery and checks that the retained config arrived at the broker.
@@ -165,7 +165,7 @@ so Home Assistant shows the correct state after restarts.
 
 Changes made outside Home Assistant (WebUI, camera button, day/night automatic)
 are picked up by a state-sync loop that the discovery script starts in the
-background: every 20 s it reads the live values from prudynt and the GPIOs and
+background: every 60 s it reads the live values from prudynt and the GPIOs and
 publishes only what changed. Not covered (no readable state): privacy, status LED, sound.
 
 At every run the discovery script also deletes retained discovery entries of this
@@ -241,3 +241,22 @@ Reported by the original author for prudynt (not re-verified here):
 - In access-point/captive-portal mode the camera is at 172.16.0.1.
 - After the WiFi setup wait for the reboot (the camera moves its lens).
 - A reset deletes all settings.
+
+## Performance (T23N, measured 15.10.2026)
+
+CPU usage over 30 s from `/proc/stat` (load average is misleading: the kernel thread `isp_fw_process`
+sits permanently in D state and adds ~1 to it).
+
+| Change | ing-sonoff-pt2-3684 | a574 | 26a4 |
+|---|---|---|---|
+| before (stock heartbeat 1 s; 3684 with motion + viewer) | 81 % | 56 % | 57 % |
+| motion detection off, no viewer | 58 % | – | – |
+| main stream 1080p/3000 -> 720p/1500 (no viewer / viewer) | 59 % / 65 % (was 58 / 62) | – | – |
+| heartbeat 1 s -> 10 s (`/etc/init.d/S99heartbeat`, `UPDATE_INTERVAL`) | **27 %** | **32 %** | **18 %** |
+
+- The stock heartbeat (web UI status cache) forks ~12 helpers per run; at 1 s it costs ~35 % CPU. The installer sets it to 10 s.
+  A firmware update restores the stock file.
+- Motion detection costs ~20 %; the installer leaves it off (HA switch *Motion Detection* turns it on).
+- Lower resolution does not reduce CPU (hardware encoder); it only halves WiFi traffic. 3684 runs 720p/1500 since then.
+- A viewer of the main stream costs only ~4–6 %.
+- HA discovery state loop: every 60 s (was 20 s).

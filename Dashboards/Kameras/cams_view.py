@@ -8,10 +8,11 @@ PATH = "kameras-ptz"
 # wie im bestehenden Tab "Kamera" fuer 26a4/a574; bei 3684/4420 ist das Bild per flip um 180 Grad gedreht.
 CAMS = [
     {"id": "wohnzimmer", "host": "ing_sonoff_pt2_3684", "title": "Wohnzimmer", "icon": "mdi:sofa",
-     "entity": "camera.sonoff_pt2_1_profile_0", "invert": False,
+     # Live standardmaessig Substream, HD (Hauptstream) ueber das Substream-Symbol im Menue
+     "entity": "camera.sonoff_pt2_1_profile_1", "hd": "camera.sonoff_pt2_1_profile_0", "invert": False,
      "presets": [("Preset 1", 1), ("Preset 2", 2), ("Preset 0", 0)]},
     {"id": "schlafzimmer", "host": "ing_sonoff_pt2_a574", "title": "Schlafzimmer", "icon": "mdi:bed",
-     "entity": "camera.sonoff_pt2_3_profile_0", "invert": True,
+     "entity": "camera.sonoff_kamera_3_profile_1", "hd": "camera.sonoff_pt2_3_profile_0", "invert": True,
      "presets": [("Ansicht 1", 1), ("Privat", 0)]},
     {"id": "unterstand", "host": "ing_sonoff_pt2_26a4", "title": "Unterstand", "icon": "mdi:home-roof",
      # Hauptstream-Video ist an dieser Kamera aus -> Substream (profile_1)
@@ -40,6 +41,7 @@ def camera(c):
     return {
         "id": c["id"],
         "camera_entity": c["entity"],
+        **({"dependencies": {"cameras": [c["id"] + "_hd"]}} if c.get("hd") else {}),
         "title": c["title"],
         "icon": c["icon"],
         "ptz": {
@@ -51,6 +53,12 @@ def camera(c):
             "presets": {name: press(h, "preset_%d_load" % n) for name, n in c["presets"]},
         },
     }
+
+
+def hd_camera(c):
+    # nur als Substream sichtbar, nicht in der Kameraliste
+    return {"id": c["id"] + "_hd", "camera_entity": c["hd"], "title": c["title"] + " HD",
+            "capabilities": {"disable_except": ["substream"]}}
 
 
 def state_icon(entity, icon, title):
@@ -83,7 +91,7 @@ for c in CAMS:
 
 CARD = {
     "type": "custom:advanced-camera-card",
-    "cameras": [camera(c) for c in CAMS],
+    "cameras": [camera(c) for c in CAMS] + [hd_camera(c) for c in CAMS if c.get("hd")],
     "view": {"default": "live"},
     "live": {
         "zoomable": True,

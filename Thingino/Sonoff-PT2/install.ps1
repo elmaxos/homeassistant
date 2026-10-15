@@ -132,12 +132,13 @@ echo "--- Motion events -> MQTT ($HOST/motion) ---"
 api json-config-send2.cgi '{"config":{"mqtt":{"enabled":true,"host":"__BROKER__","port":__PORT__,"username":"__USER__","password":"__PASS__","use_ssl":false,"client_id":"'"$HOST"'","topic":"'"$HOST"'/motion","message":"{\"timestamp\": \"%s\"}","send_photo":false,"topic_photo":""}}}' >/dev/null \
 	|| fail "json-config-send2.cgi (mqtt) failed"
 
-# Motion detection is written to /etc/prudynt.json and activated by restarting
+# Motion detection is written to /etc/prudynt.json and applied by restarting
 # prudynt. Enabling it live on a fresh camera crashes prudynt (detection frame
-# 0x0), so the frame is set to the main stream size here.
+# 0x0), so the frame is set to the main stream size here. It stays OFF by default
+# (costs ~20 % CPU on the T23N); switch "Motion Detection" in HA turns it on.
 W=$(jct /etc/prudynt.json get stream0.width 2>/dev/null); H=$(jct /etc/prudynt.json get stream0.height 2>/dev/null)
 W=${W:-1920}; H=${H:-1080}
-for kv in "enabled true" "send2mqtt true" "frame_width $W" "frame_height $H" "roi_count 1" "roi_0_x 0" "roi_0_y 0" "roi_1_x $((W - 1))" "roi_1_y $((H - 1))"; do
+for kv in "enabled false" "send2mqtt true" "frame_width $W" "frame_height $H" "roi_count 1" "roi_0_x 0" "roi_0_y 0" "roi_1_x $((W - 1))" "roi_1_y $((H - 1))"; do
 	jct /etc/prudynt.json set "motion.${kv% *}" "${kv#* }" >/dev/null || fail "cannot write motion.${kv% *}"
 done
 echo "--- Restart prudynt to apply motion settings ---"
@@ -149,6 +150,13 @@ while [ ! -S /run/prudynt/prudynt.sock ] || ! pidof prudynt >/dev/null 2>&1; do
 done
 sleep 3
 pidof prudynt >/dev/null 2>&1 || fail "prudynt crashed after restart (see logread)"
+
+echo "--- Heartbeat (web UI status) every 10 s instead of every second ---"
+# The stock heartbeat forks ~12 helpers per run; at 1 s it costs ~35 % CPU on the T23N.
+if grep -q '^UPDATE_INTERVAL=1$' /etc/init.d/S99heartbeat 2>/dev/null; then
+	sed -i 's/^UPDATE_INTERVAL=1$/UPDATE_INTERVAL=10/' /etc/init.d/S99heartbeat
+	/etc/init.d/S99heartbeat stop >/dev/null 2>&1; sleep 1; /etc/init.d/S99heartbeat start >/dev/null 2>&1
+fi
 
 echo "--- Restart MQTT subscriber ---"
 # S91mqttsub stop only kills the dispatcher shell; its mosquitto_sub child would
