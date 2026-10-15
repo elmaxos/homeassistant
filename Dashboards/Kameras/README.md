@@ -45,3 +45,14 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
 Dashboard bearbeiten → Ansicht hinzufügen → Raw-Konfigurationseditor, Inhalt von `view.yaml` einfügen.
 Oder `cams_view.py` im HA-Container ausführen
 (`docker exec -e T=$SUPERVISOR_TOKEN homeassistant python3 cams_view.py`), es ersetzt den Tab per Websocket.
+
+## Offener Punkt: Ruckeln am PC (Stand 15.10.2026, nicht abschließend geklärt)
+
+Schlafzimmer (a574) ruckelt im Chrome am PC: Uhr hängt, nur alle paar Sekunden ein Bild, „stalled“, Wechsel zwischen
+HLS und WebRTC, grüne/verpixelte Artefakte. Stream bleibt vorerst unverändert (1080p, 3000 kbit/s).
+
+- Kamera → HA ist sauber: über den lokalen go2rtc-RTSP dekodiert 14,6 fps, 1 Decodierfehler in 30 s; Pi 5 kaum ausgelastet.
+- PC → HA: 1 Gbit/s Link ohne Fehler, aber nur ~50 Mbit/s Durchsatz (SSH und HTTP gleich), Ping unter Last 25 ms (max. 72).
+- Ein Handy über den OG-Repeater (gleicher Switch wie der PC) schafft 300 Mbit/s → Engpass vermutlich am PC
+  (USB-C-Dock / USB-Ethernet-Adapter / Sicherheitssoftware), nicht an der Hausverkabelung.
+- Nächste Schritte, falls nötig: auf anderem Gerät gegentesten; dann Bitrate a574 auf 2000 kbit/s und GOP 15 probieren.
