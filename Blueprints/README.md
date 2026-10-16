@@ -33,8 +33,10 @@ solange `event_type` der Taste `long_press` ist; `long_release` startet die Auto
 
 | Taste | einfach | doppelt | lang (halten) |
 |---|---|---|---|
-| oben (1) | Bettlicht an (`light.sz_tra_bett`, 1 s Übergang, letzte Helligkeit) | Rauschen an (`switch.ing_sonoff_pt2_a574_noise`) | heller, 10 % alle 0,4 s bis 100 % |
-| unten (2) | Bettlicht aus (1 s Übergang) | Rauschen aus | dunkler, 10 % alle 0,4 s bis 1 % (geht nicht aus) |
+| oben (1) | Bettlicht an (immer 1 %, 1 s Übergang) / aus (`light.sz_tra_bett`) | Rauschen lauter (+20, max. 100) | heller, 10 % alle 0,4 s bis 100 % |
+| unten (2) | Rauschen an/aus (`switch.ing_sonoff_pt2_a574_noise`) | Rauschen leiser (−20, min. 20) | dunkler, 10 % alle 0,4 s bis 1 % (bleibt an) |
+
+Lautstärke: `number.ing_sonoff_pt2_a574_noise_volume`; wirkt sofort, wenn das Rauschen läuft, sonst beim nächsten Start.
 
 ## meine_heizung/externer_temperaturfuehler.yaml
 

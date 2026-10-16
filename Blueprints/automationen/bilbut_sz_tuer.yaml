@@ -1,7 +1,7 @@
 - id: bilbut_sz_tuer
   alias: BILBUT_SZ_Tuer
-  description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben (Taste 1): einfach Bettlicht an, halten heller, doppelt Rauschen an. Unten
-    (Taste 2): einfach Bettlicht aus, halten dunkler (bis 1 %), doppelt Rauschen aus.'
+  description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben (Taste 1): einfach Bettlicht an (1 %)/aus, halten heller, doppelt Rauschen
+    lauter (+20). Unten (Taste 2): einfach Rauschen an/aus, halten dunkler (bis 1 %), doppelt Rauschen leiser (-20). Lautstaerke 20-100.'
   triggers:
   - trigger: state
     entity_id: event.schlafzimmer_bilbut_sz_tuer_taste_1
@@ -25,20 +25,30 @@
       - condition: template
         value_template: '{{ taste == ''oben'' and art == ''multi_press_1'' }}'
       sequence:
-      - action: light.turn_on
-        target:
+      - if:
+        - condition: state
           entity_id: light.sz_tra_bett
-        data:
-          transition: 1
+          state: 'on'
+        then:
+        - action: light.turn_off
+          target:
+            entity_id: light.sz_tra_bett
+          data:
+            transition: 1
+        else:
+        - action: light.turn_on
+          target:
+            entity_id: light.sz_tra_bett
+          data:
+            brightness_pct: 1
+            transition: 1
     - conditions:
       - condition: template
         value_template: '{{ taste == ''unten'' and art == ''multi_press_1'' }}'
       sequence:
-      - action: light.turn_off
+      - action: switch.toggle
         target:
-          entity_id: light.sz_tra_bett
-        data:
-          transition: 1
+          entity_id: switch.ing_sonoff_pt2_a574_noise
     - conditions:
       - condition: template
         value_template: '{{ taste == ''oben'' and art == ''long_press'' }}'
@@ -95,16 +105,12 @@
             - stop: Grenze erreicht
     - conditions:
       - condition: template
-        value_template: '{{ taste == ''oben'' and art == ''multi_press_2'' }}'
+        value_template: '{{ art == ''multi_press_2'' }}'
       sequence:
-      - action: switch.turn_on
+      - action: number.set_value
         target:
-          entity_id: switch.ing_sonoff_pt2_a574_noise
-    - conditions:
-      - condition: template
-        value_template: '{{ taste == ''unten'' and art == ''multi_press_2'' }}'
-      sequence:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.ing_sonoff_pt2_a574_noise
+          entity_id: number.ing_sonoff_pt2_a574_noise_volume
+        data:
+          value: '{{ ([20, (states(''number.ing_sonoff_pt2_a574_noise_volume'') | int(40)) + (20 if taste == ''oben'' else -20), 100] | sort)[1]
+            }}'
   mode: restart
