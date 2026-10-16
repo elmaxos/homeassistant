@@ -20,6 +20,7 @@ CAMS = [
      "presets": [("Preset 1", 1), ("Preset 0", 0)]},
     {"id": "kamera4420", "host": "ing_sonoff_pt2_4420", "title": "Kamera 4420", "icon": "mdi:cctv",
      "entity": "camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2", "invert": False,
+     "ircut": "switch.ing_sonoff_pt2_4420_ir_cut_filter", "no_status_led": True,
      "presets": [("Preset 0", 0), ("Preset 1", 1)]},
 ]
 
@@ -86,6 +87,10 @@ for c in CAMS:
             state_icon("switch.%s_white_light" % h, "mdi:light-flood-down", "Weisslicht"),
             state_icon("switch.%s_ir_light_850nm" % h, "mdi:led-outline", "IR-Licht"),
             state_icon("switch.%s_privacy" % h, "mdi:eye-off", "Privatsphaere"),
+            state_icon(c.get("ircut", "switch.%s_ir_cut" % h), "mdi:camera-iris", "IR-Filter"),
+        ] + ([] if c.get("no_status_led") else [
+            state_icon("switch.%s_status_led" % h, "mdi:led-on", "Status-LED (blau)"),
+        ]) + [
         ],
     })
 
@@ -100,9 +105,13 @@ CARD = {
         # nur die sichtbare Kamera streamt
         "lazy_unload": ["unselected", "hidden"],
         "display": {"mode": "single"},
-        "controls": {"ptz": {"mode": "on", "position": "bottom-right", "orientation": "horizontal"}},
+        # Bedienelemente aufgeraeumt: PTZ standardmaessig aus (Knopf im Menue), keine Wechsel-Pfeile im Bild
+        "controls": {"ptz": {"mode": "off", "position": "bottom-right", "orientation": "horizontal"},
+                     "next_previous": {"style": "none"}},
     },
-    "menu": {"style": "overlay", "position": "top", "alignment": "right"},
+    # Menue nur bei Maus ueber dem Bild bzw. nach Antippen
+    "menu": {"style": "hover", "position": "top", "alignment": "right",
+             "buttons": {"ptz_controls": {"enabled": True}}},
     "elements": ELEMENTS,
     "dimensions": {"aspect_ratio": "16:9"},
     "grid_options": {"columns": "full"},
