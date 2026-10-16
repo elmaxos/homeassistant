@@ -13,6 +13,7 @@ CAMS = [
      "presets": [("Preset 1", 1), ("Preset 2", 2), ("Preset 0", 0)]},
     {"id": "schlafzimmer", "host": "ing_sonoff_pt2_a574", "title": "Schlafzimmer", "icon": "mdi:bed",
      "entity": "camera.sonoff_pt2_3_profile_0", "sub": "camera.sonoff_kamera_3_profile_1", "invert": True,
+     "noise": True,
      "presets": [("Ansicht 1", 1), ("Privat", 0)]},
     {"id": "unterstand", "host": "ing_sonoff_pt2_26a4", "title": "Unterstand", "icon": "mdi:home-roof",
      # Hauptstream-Video ist an dieser Kamera aus -> Substream (profile_1)
@@ -88,6 +89,8 @@ for c in CAMS:
             state_icon("switch.%s_ir_light_850nm" % h, "mdi:led-outline", "IR-Licht"),
             state_icon("switch.%s_privacy" % h, "mdi:eye-off", "Privatsphaere"),
             state_icon(c.get("ircut", "switch.%s_ir_cut" % h), "mdi:camera-iris", "IR-Filter"),
+            state_icon("switch.%s_color_mode" % h, "mdi:invert-colors", "Farbe / Schwarzweiss"),
+        ] + ([state_icon("switch.%s_noise" % h, "mdi:waveform", "Rauschen")] if c.get("noise") else []) + [
         ] + ([] if c.get("no_status_led") else [
             state_icon("switch.%s_status_led" % h, "mdi:led-on", "Status-LED (blau)"),
         ]) + [
