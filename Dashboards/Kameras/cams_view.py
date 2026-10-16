@@ -63,6 +63,21 @@ def sub_camera(c):
             "capabilities": {"disable_except": ["substream"]}}
 
 
+def noise_menu(h):
+    # Rauschen: Ein/Aus, Farbe (aus select-Entity), Lautstaerke in Stufen
+    vol = "number.%s_noise_volume" % h
+    return [
+        state_icon("switch.%s_noise" % h, "mdi:waveform", "Rauschen"),
+        {"type": "custom:advanced-camera-card-menu-submenu-select", "entity": "select.%s_noise_color" % h,
+         "icon": "mdi:palette", "title": "Rauschen Farbe"},
+        {"type": "custom:advanced-camera-card-menu-submenu", "icon": "mdi:volume-medium", "title": "Rauschen Lautstaerke",
+         "items": [{"title": "Lautstaerke %d" % v, "icon": "mdi:volume-low" if v < 30 else ("mdi:volume-medium" if v < 50 else "mdi:volume-high"),
+                    "tap_action": {"action": "perform-action", "perform_action": "number.set_value",
+                                   "target": {"entity_id": vol}, "data": {"value": v}}}
+                   for v in (15, 20, 25, 30, 35, 40, 50, 60)]},
+    ]
+
+
 def state_icon(entity, icon, title):
     return {"type": "custom:advanced-camera-card-menu-state-icon", "entity": entity, "icon": icon,
             "title": title, "tap_action": {"action": "toggle"}}
@@ -90,7 +105,7 @@ for c in CAMS:
             state_icon("switch.%s_privacy" % h, "mdi:eye-off", "Privatsphaere"),
             state_icon(c.get("ircut", "switch.%s_ir_cut" % h), "mdi:camera-iris", "IR-Filter"),
             state_icon("switch.%s_color_mode" % h, "mdi:invert-colors", "Farbe / Schwarzweiss"),
-        ] + ([state_icon("switch.%s_noise" % h, "mdi:waveform", "Rauschen")] if c.get("noise") else []) + [
+        ] + (noise_menu(h) if c.get("noise") else []) + [
         ] + ([] if c.get("no_status_led") else [
             state_icon("switch.%s_status_led" % h, "mdi:led-on", "Status-LED (blau)"),
         ]) + [
