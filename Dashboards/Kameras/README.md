@@ -41,7 +41,7 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
     Weißlicht, IR-Licht, Privatsphäre, IR-Filter (`switch.<host>_ir_cut`, bei 4420 `_ir_cut_filter`),
     Farbe/Schwarzweiß (`switch.<host>_color_mode`) und Status-LED (blau, `switch.<host>_status_led`; 4420 meldet keine).
   - Nur Schlafzimmer: **Rauschen** ein/aus (`switch.ing_sonoff_pt2_a574_noise`), Untermenü **Farbe**
-    (`menu-submenu-select` auf `select.ing_sonoff_pt2_a574_noise_color`) und Untermenü **Lautstärke** (15–60,
+    (`menu-submenu-select` auf `select.ing_sonoff_pt2_a574_noise_color`) und Untermenü **Lautstärke** (20, 40, 60, 80, 100,
     `number.set_value` auf `number.ing_sonoff_pt2_a574_noise_volume`). Siehe `Thingino/Sonoff-PT2/noise/`.
 - **Zoom per Geste:** Zwei-Finger-Pinch am Handy, am PC Strg + Mausrad, danach verschieben.
 - Nur die sichtbare Kamera streamt (`live.lazy_unload: [unselected, hidden]`).

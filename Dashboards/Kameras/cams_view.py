@@ -71,10 +71,10 @@ def noise_menu(h):
         {"type": "custom:advanced-camera-card-menu-submenu-select", "entity": "select.%s_noise_color" % h,
          "icon": "mdi:palette", "title": "Rauschen Farbe"},
         {"type": "custom:advanced-camera-card-menu-submenu", "icon": "mdi:volume-medium", "title": "Rauschen Lautstaerke",
-         "items": [{"title": "Lautstaerke %d" % v, "icon": "mdi:volume-low" if v < 30 else ("mdi:volume-medium" if v < 50 else "mdi:volume-high"),
+         "items": [{"title": "Lautstaerke %d" % v, "icon": "mdi:volume-low" if v <= 20 else ("mdi:volume-medium" if v <= 60 else "mdi:volume-high"),
                     "tap_action": {"action": "perform-action", "perform_action": "number.set_value",
                                    "target": {"entity_id": vol}, "data": {"value": v}}}
-                   for v in (15, 20, 25, 30, 35, 40, 50, 60)]},
+                   for v in (20, 40, 60, 80, 100)]},
     ]
 
 
