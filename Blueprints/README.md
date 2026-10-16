@@ -26,6 +26,16 @@ Benutzt von: `BILBUT_WZ_Tuer` (Wohnzimmer-Tür: Licht, Beamer/Monitor, Zeitansag
 | oben (1) | Deckenspots an (vorherige Szene `scene.arbeitszimmer_vorher`, sonst alle drei an) | – | PC-Steckdose an (`switch.az_ins_schreibtisch_ba_2`) |
 | unten (2) | Deckenspots aus (merkt den Zustand als Szene) | – | PC-Steckdose aus (`switch.az_ins_schreibtisch_ba_2`) |
 
+## BILBUT_SZ_Tuer (Schlafzimmer-Tür), `automationen/bilbut_sz_tuer.yaml`
+
+Eigene Automation (kein Blueprint), damit Loslassen das Dimmen beendet: `mode: restart`, die Dimm-Schleife läuft,
+solange `event_type` der Taste `long_press` ist; `long_release` startet die Automation neu und beendet sie.
+
+| Taste | einfach | doppelt | lang (halten) |
+|---|---|---|---|
+| oben (1) | Bettlicht an (`light.sz_tra_bett`, 1 s Übergang, letzte Helligkeit) | Rauschen an (`switch.ing_sonoff_pt2_a574_noise`) | heller, 10 % alle 0,4 s bis 100 % |
+| unten (2) | Bettlicht aus (1 s Übergang) | Rauschen aus | dunkler, 10 % alle 0,4 s bis 1 % (geht nicht aus) |
+
 ## meine_heizung/externer_temperaturfuehler.yaml
 
 Raumthermometer → SONOFF TRVZB (externer Fühler) mit Fallback auf den eingebauten Fühler. Details in [../Heizung/README.md](../Heizung/README.md).

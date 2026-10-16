@@ -1,0 +1,110 @@
+- id: bilbut_sz_tuer
+  alias: BILBUT_SZ_Tuer
+  description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben (Taste 1): einfach Bettlicht an, halten heller, doppelt Rauschen an. Unten
+    (Taste 2): einfach Bettlicht aus, halten dunkler (bis 1 %), doppelt Rauschen aus.'
+  triggers:
+  - trigger: state
+    entity_id: event.schlafzimmer_bilbut_sz_tuer_taste_1
+    not_from:
+    - unavailable
+    id: oben
+  - trigger: state
+    entity_id: event.schlafzimmer_bilbut_sz_tuer_taste_2
+    not_from:
+    - unavailable
+    id: unten
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.to_state.state not in [''unavailable'', ''unknown''] }}'
+  actions:
+  - variables:
+      taste: '{{ trigger.id }}'
+      art: '{{ trigger.to_state.attributes.event_type }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''oben'' and art == ''multi_press_1'' }}'
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id: light.sz_tra_bett
+        data:
+          transition: 1
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''unten'' and art == ''multi_press_1'' }}'
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.sz_tra_bett
+        data:
+          transition: 1
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''oben'' and art == ''long_press'' }}'
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_1'', ''event_type'') == ''long_press'' }}'
+          sequence:
+          - variables:
+              pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'', ''on'')
+                else 0 }}'
+          - variables:
+              neu: '{{ [pct + 10, 100] | min }}'
+          - action: light.turn_on
+            target:
+              entity_id: light.sz_tra_bett
+            data:
+              brightness_pct: '{{ neu }}'
+              transition: 0.4
+          - delay:
+              milliseconds: 400
+          - if:
+            - condition: template
+              value_template: '{{ neu in [1, 100] }}'
+            then:
+            - stop: Grenze erreicht
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''unten'' and art == ''long_press'' }}'
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_2'', ''event_type'') == ''long_press'' }}'
+          sequence:
+          - variables:
+              pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'', ''on'')
+                else 0 }}'
+          - variables:
+              neu: '{{ [pct - 10, 1] | max }}'
+          - action: light.turn_on
+            target:
+              entity_id: light.sz_tra_bett
+            data:
+              brightness_pct: '{{ neu }}'
+              transition: 0.4
+          - delay:
+              milliseconds: 400
+          - if:
+            - condition: template
+              value_template: '{{ neu in [1, 100] }}'
+            then:
+            - stop: Grenze erreicht
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''oben'' and art == ''multi_press_2'' }}'
+      sequence:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.ing_sonoff_pt2_a574_noise
+    - conditions:
+      - condition: template
+        value_template: '{{ taste == ''unten'' and art == ''multi_press_2'' }}'
+      sequence:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.ing_sonoff_pt2_a574_noise
+  mode: restart
