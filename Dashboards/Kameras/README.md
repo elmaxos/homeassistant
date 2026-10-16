@@ -29,14 +29,20 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
 
 ## Bedienung
 
-- **PTZ-Steuerung** unten rechts im Bild: Pfeile drücken die MQTT-Buttons `ptz_*_fast`, gedrückt halten wiederholt
-  alle 0,4 s. Home-Taste = erstes Preset, daneben die Preset-Liste (gespeicherte Presets je Kamera).
-- **Menü oben rechts im Bild** (Overlay):
-  - Lupe + / − zoomt digital, solange gedrückt; Lupe mit X setzt den Zoom zurück. Die Kameras haben keinen optischen
-    Zoom. Die Karte erlaubt in `cameras[].ptz.actions_zoom_*` nur `perform-action`, deshalb liegen die Zoom-Tasten
-    als `elements` im Menü.
-  - Weißlicht, IR-Licht und Privatsphäre der **gerade gewählten** Kamera (`custom:advanced-camera-card-conditional`
-    mit `condition: camera`).
+- **Kamera wechseln** mit den Pfeilen links/rechts im Bild (`next_previous: chevrons`) oder über das Kamera-Symbol im Menü.
+- Das **Menü oben rechts** erscheint, sobald die Maus über dem Bild ist (am Handy nach Antippen, `menu.style: hover`). Darin:
+  - **Schwenk-Steuerung ein/aus** (`menu.buttons.ptz_controls`, standardmäßig aus: `live.controls.ptz.mode: off`).
+    Eingeblendet unten rechts: Pfeile drücken die MQTT-Buttons `ptz_*_fast`, gedrückt halten wiederholt alle 0,4 s;
+    Home-Taste = erstes Preset, daneben die Preset-Liste.
+  - **Substream** (kleiner Stream) bei Wohnzimmer und Schlafzimmer.
+  - **Zoom** + / − (digital, gedrückt halten) und Zoom zurücksetzen. Die Karte erlaubt in `cameras[].ptz.actions_zoom_*`
+    nur `perform-action`, deshalb liegen die Zoom-Tasten als `elements` im Menü.
+  - Für die **gerade gewählte** Kamera (`custom:advanced-camera-card-conditional` mit `condition: camera`):
+    Weißlicht, IR-Licht, Privatsphäre, IR-Filter (`switch.<host>_ir_cut`, bei 4420 `_ir_cut_filter`),
+    Farbe/Schwarzweiß (`switch.<host>_color_mode`) und Status-LED (blau, `switch.<host>_status_led`; 4420 meldet keine).
+  - Nur Schlafzimmer: **Rauschen** ein/aus (`switch.ing_sonoff_pt2_a574_noise`), Untermenü **Farbe**
+    (`menu-submenu-select` auf `select.ing_sonoff_pt2_a574_noise_color`) und Untermenü **Lautstärke** (15–60,
+    `number.set_value` auf `number.ing_sonoff_pt2_a574_noise_volume`). Siehe `Thingino/Sonoff-PT2/noise/`.
 - **Zoom per Geste:** Zwei-Finger-Pinch am Handy, am PC Strg + Mausrad, danach verschieben.
 - Nur die sichtbare Kamera streamt (`live.lazy_unload: [unselected, hidden]`).
 
