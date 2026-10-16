@@ -123,9 +123,9 @@ CARD = {
         # nur die sichtbare Kamera streamt
         "lazy_unload": ["unselected", "hidden"],
         "display": {"mode": "single"},
-        # Bedienelemente aufgeraeumt: PTZ standardmaessig aus (Knopf im Menue), keine Wechsel-Pfeile im Bild
+        # Bedienelemente aufgeraeumt: PTZ standardmaessig aus (Knopf im Menue); Wechsel-Pfeile links/rechts im Bild
         "controls": {"ptz": {"mode": "off", "position": "bottom-right", "orientation": "horizontal"},
-                     "next_previous": {"style": "none"}},
+                     "next_previous": {"style": "chevrons"}},
     },
     # Menue nur bei Maus ueber dem Bild bzw. nach Antippen
     "menu": {"style": "hover", "position": "top", "alignment": "right",
