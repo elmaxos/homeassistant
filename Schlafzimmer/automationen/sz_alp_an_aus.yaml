@@ -1,0 +1,43 @@
+- id: '1776798781974'
+  alias: Sz_alp_an_aus
+  description: Display der ALPSTUGA am Bett bei Bewegung an (nur wenn baby_schlaeft aus ist), bei freiem Raum aus.
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.sz_myg_wand_belegung
+    to:
+    - 'off'
+    id: frei
+  - trigger: state
+    entity_id:
+    - binary_sensor.sz_myg_wand_belegung
+    to:
+    - 'on'
+    id: 'erkannt '
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - 'erkannt '
+      - condition: state
+        entity_id: input_boolean.baby_schlaeft
+        state: 'off'
+      sequence:
+      - action: switch.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.sz_alp_bett
+    - conditions:
+      - condition: trigger
+        id:
+        - frei
+      sequence:
+      - action: switch.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.sz_alp_bett
+  mode: single
