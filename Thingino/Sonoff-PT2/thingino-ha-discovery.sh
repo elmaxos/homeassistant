@@ -568,6 +568,9 @@ if [ -x /usr/sbin/noise ]; then
 	echo "  [switch] Rauschen"
 	pub_number "noise_volume" "Rauschen Lautstärke" "noise volume {{ value | int }}" 0 100 5 "" "${NOISE_VOL:-35}"
 	pub_select "noise_color" "Rauschen Farbe" "noise color {{ value }}" '["weiss","rosa","braun"]' "${NOISE_COLOR:-braun}"
+	NOISE_FIN=$(sed -n 's/^FADE_IN=//p' /etc/noise.conf 2>/dev/null); NOISE_FOUT=$(sed -n 's/^FADE_OUT=//p' /etc/noise.conf 2>/dev/null)
+	pub_number "noise_fade_in" "Rauschen Einblenden" "noise fade_in {{ value | int }}" 0 30 1 "s" "${NOISE_FIN:-5}"
+	pub_number "noise_fade_out" "Rauschen Ausblenden" "noise fade_out {{ value | int }}" 0 30 1 "s" "${NOISE_FOUT:-5}"
 fi
 
 # PTZ-Position und erkanntes Preset (/usr/sbin/ptz-state meldet alle 3 s bei Aenderung)

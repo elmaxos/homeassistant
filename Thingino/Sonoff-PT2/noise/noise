@@ -2,6 +2,7 @@
 # Rauschen (weiss/rosa/braun) in Endlosschleife ueber den Kamera-Lautsprecher (Thingino / prudynt).
 # Laeuft komplett auf der Kamera; HA startet/stoppt nur per MQTT (<hostname>/cmd, eval):
 #   noise start [lautstaerke]   noise stop   noise volume 0-100   noise color weiss|rosa|braun
+#   noise fade_in 0-30   noise fade_out 0-30   (Sekunden Ein-/Ausblenden)
 #   noise boot   noise status
 #
 # Wiedergabe: 60 s Material in 2-s-Stuecken, ohne prudynt-Wiederholung (loop=); das Skript haengt die Stuecke selbst
@@ -29,6 +30,8 @@ CHB=$((CH * RATE * 2))
 
 VOL=35
 COLOR=braun
+FADE_IN=5
+FADE_OUT=5
 [ -f "$CONF" ] && . "$CONF"
 
 cfg() { jct /etc/thingino.json get "mqtt_sub.$1" 2>/dev/null | tr -d '"'; }
@@ -36,7 +39,30 @@ pub() {
 	mosquitto_pub -h "$(cfg host)" -p "$(cfg port)" -u "$(cfg username)" -P "$(cfg password)" \
 		-r -t "$HOST/state/$1" -m "$2" >/dev/null 2>&1
 }
-save() { printf 'VOL=%s\nCOLOR=%s\n' "$VOL" "$COLOR" > "$CONF"; }
+save() { printf 'VOL=%s\nCOLOR=%s\nFADE_IN=%s\nFADE_OUT=%s\n' "$VOL" "$COLOR" "$FADE_IN" "$FADE_OUT" > "$CONF"; }
+FADEP=/run/noise.fade.pid
+fade_kill() { [ -f "$FADEP" ] && kill "$(cat "$FADEP")" 2>/dev/null; rm -f "$FADEP"; }
+
+# Einblenden 0 -> Ziel in 0,25-s-Schritten; das Ziel wird jeden Schritt neu aus der Konfiguration gelesen,
+# damit eine Lautstaerke-Aenderung waehrend des Einblendens gilt
+fade_in() {
+	steps=$((FADE_IN * 4)); i=1
+	while [ $i -le $steps ]; do
+		v=$(sed -n 's/^VOL=//p' "$CONF"); v=${v:-$VOL}
+		spk_set $((v * i / steps)); sleep 0.25; i=$((i + 1))
+	done
+	v=$(sed -n 's/^VOL=//p' "$CONF"); spk_set "${v:-$VOL}"
+	rm -f "$FADEP"
+}
+
+# Ausblenden von der aktuellen Lautstaerke auf 0 (blockiert FADE_OUT Sekunden)
+fade_out() {
+	fade_kill
+	from=$(spk_get); from=${from:-$VOL}; steps=$((FADE_OUT * 4)); i=1
+	while [ $i -le $steps ]; do
+		spk_set $((from - from * i / steps)); sleep 0.25; i=$((i + 1))
+	done
+}
 running() { [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; }
 spk_get() { echo '{"audio":{"spk_vol":null}}' | prudyntctl json - 2>/dev/null | sed -n 's/.*"spk_vol":\([0-9]*\).*/\1/p'; }
 spk_set() { printf '{"audio":{"spk_vol":%s}}' "$1" | prudyntctl json - >/dev/null 2>&1; }
@@ -108,25 +134,35 @@ quiet_flush() {
 
 start() {
 	if running; then
-		kill_loop; quiet_flush          # "Ersetzen" raeumt bei prudynt nicht zuverlaessig auf -> erst leeren
+		fade_out; kill_loop; quiet_flush   # ausblenden, solange noch nachgeschoben wird; dann Warteschlange leeren
 	else
 		[ -f "$PREVF" ] || spk_get > "$PREVF"   # Ansage-Lautstaerke merken
 		echo STOP > /run/prudynt/audio_out
 	fi
 	f=$(prepare "$COLOR") || { f=$(prepare weiss) && COLOR=weiss; } || exit 1
-	spk_set "$VOL"
+	spk_set 0
 	loop "$f" </dev/null >/dev/null 2>&1 &
 	echo $! > "$PIDF"
+	if [ "$FADE_IN" -gt 0 ]; then
+		fade_in </dev/null >/dev/null 2>&1 &
+		echo $! > "$FADEP"
+	else
+		spk_set "$VOL"
+	fi
 	pub noise ON; pub noise_volume "$VOL"; pub noise_color "$COLOR"
 }
 
 stop() {
-	kill_loop
-	if [ -f "$PREVF" ]; then
-		quiet_flush                       # laedt die gespeicherte Ansage-Lautstaerke
+	if running; then
+		pub noise OFF
+		fade_out                          # ausblenden, waehrend die Schleife noch Stuecke nachschiebt
+		kill_loop
+		quiet_flush                       # Warteschlange leeren, laedt die gespeicherte Ansage-Lautstaerke
 		rm -f "$PREVF"
+	elif [ -f "$PREVF" ]; then            # Schleife weg, Lautstaerke noch verstellt -> aufraeumen
+		quiet_flush; rm -f "$PREVF"
 	else
-		echo STOP > /run/prudynt/audio_out
+		echo STOP > /run/prudynt/audio_out   # kein Rauschen: normaler Stopp fuer andere Sounds
 	fi
 	pub noise OFF
 }
@@ -141,15 +177,21 @@ case "$1" in
 		case "$2" in ''|*[!0-9]*) echo "noise volume 0-100" >&2; exit 1 ;; esac
 		VOL=$2; [ "$VOL" -gt 100 ] && VOL=100
 		save; pub noise_volume "$VOL"
-		running && spk_set "$VOL" ;;
+		running && { [ -f "$FADEP" ] && kill -0 "$(cat "$FADEP")" 2>/dev/null || spk_set "$VOL"; } ;;
 	color)
 		case "$2" in weiss|rosa|braun) COLOR=$2 ;; *) echo "noise color weiss|rosa|braun" >&2; exit 1 ;; esac
 		save; pub noise_color "$COLOR"
 		running && start ;;
+	fade_in|fade_out)
+		case "$2" in ''|*[!0-9]*) echo "noise $1 0-30" >&2; exit 1 ;; esac
+		v=$2; [ "$v" -gt 30 ] && v=30
+		[ "$1" = fade_in ] && FADE_IN=$v || FADE_OUT=$v
+		save; pub "noise_$1" "$v" ;;
 	boot)
-		rm -f "$PIDF" "$PREVF"; pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR" ;;
+		rm -f "$PIDF" "$PREVF" "$FADEP"; pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR"
+		pub noise_fade_in "$FADE_IN"; pub noise_fade_out "$FADE_OUT" ;;
 	status)
-		running && s=an || s=aus; echo "$s, Lautstaerke $VOL, Farbe $COLOR, Lautsprecher jetzt $(spk_get)" ;;
+		running && s=an || s=aus; echo "$s, Lautstaerke $VOL, Farbe $COLOR, Ein/Aus $FADE_IN/$FADE_OUT s, Lautsprecher jetzt $(spk_get)" ;;
 	*)
-		echo "Usage: noise start [vol]|stop|volume N|color weiss|rosa|braun|boot|status" >&2; exit 1 ;;
+		echo "Usage: noise start [vol]|stop|volume N|color weiss|rosa|braun|fade_in S|fade_out S|boot|status" >&2; exit 1 ;;
 esac

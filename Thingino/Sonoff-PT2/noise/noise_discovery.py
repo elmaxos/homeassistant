@@ -27,6 +27,20 @@ configs = {
         "command_topic": cmd, "command_template": "noise color {{ value }}",
         "state_topic": st + "noise_color", "options": ["weiss", "rosa", "braun"], "device": dev,
     },
+    "number/%s_noise_fade_in/config" % HOST: {
+        "name": "Rauschen Einblenden", "unique_id": HOST + "_noise_fade_in",
+        "default_entity_id": "number.%s_noise_fade_in" % OBJ, "icon": "mdi:volume-plus",
+        "command_topic": cmd, "command_template": "noise fade_in {{ value | int }}",
+        "state_topic": st + "noise_fade_in", "min": 0, "max": 30, "step": 1, "unit_of_measurement": "s",
+        "mode": "slider", "device": dev,
+    },
+    "number/%s_noise_fade_out/config" % HOST: {
+        "name": "Rauschen Ausblenden", "unique_id": HOST + "_noise_fade_out",
+        "default_entity_id": "number.%s_noise_fade_out" % OBJ, "icon": "mdi:volume-minus",
+        "command_topic": cmd, "command_template": "noise fade_out {{ value | int }}",
+        "state_topic": st + "noise_fade_out", "min": 0, "max": 30, "step": 1, "unit_of_measurement": "s",
+        "mode": "slider", "device": dev,
+    },
 }
 # altes Topic-Format (<typ>/<host>/<name>) leeren, damit es keine doppelte unique_id gibt
 old = ["switch/%s/noise/config" % HOST, "number/%s/noise_volume/config" % HOST, "select/%s/noise_color/config" % HOST]
