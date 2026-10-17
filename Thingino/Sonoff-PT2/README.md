@@ -270,3 +270,11 @@ sits permanently in D state and adds ~1 to it).
   Änderung und jede Minute. HA-Sensoren `sensor.<host>_ptz_position` / `_ptz_preset`. Für Kameras mit altem Discovery-Skript:
   `ptz_discovery.py <host> <device-identifier>` auf HA.
 - **Stop Sound** beendet auch ein laufendes Rauschen.
+
+## Zeitzone bei prudynt-Neustarts
+
+prudynt liest die Zeitzone aus der Umgebungsvariable `TZ`, die beim Booten aus `/etc/TZ` gesetzt wird. Ein Neustart aus
+einer SSH-Sitzung oder aus dem MQTT-Dispatcher hat diese Variable nicht → die Uhr im Bild zeigt UTC (im Sommer 2 h zu früh).
+Alle Skripte starten prudynt deshalb mit `TZ=$(cat /etc/TZ) /etc/init.d/S31prudynt restart`.
+Am 15.10.2026 blieb bei `ing-sonoff-pt2-26a4` außerdem die Zeit-Einblendung stehen (Video lief weiter); ein
+prudynt-Neustart hat das behoben.

@@ -113,7 +113,7 @@ kill_loop() {
 }
 
 restart_prudynt() {
-	/etc/init.d/S31prudynt restart >/dev/null 2>&1
+	TZ=$(cat /etc/TZ 2>/dev/null) /etc/init.d/S31prudynt restart >/dev/null 2>&1   # mit Zeitzone, sonst blendet prudynt UTC ein
 	i=0
 	while [ $i -lt 30 ]; do
 		[ -S /run/prudynt/prudynt.sock ] && pidof prudynt >/dev/null && [ -p /run/prudynt/audio_out ] && break

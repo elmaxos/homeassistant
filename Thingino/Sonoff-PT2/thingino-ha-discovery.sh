@@ -344,7 +344,7 @@ case "$CMD" in
 			for kv in "enabled true" "frame_width ${W:-1920}" "frame_height ${H:-1080}" "roi_count 1" "roi_0_x 0" "roi_0_y 0" "roi_1_x $((${W:-1920} - 1))" "roi_1_y $((${H:-1080} - 1))"; do
 				jct /etc/prudynt.json set motion.${kv% *} ${kv#* } >/dev/null
 			done
-			/etc/init.d/S31prudynt restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ 2>/dev/null) /etc/init.d/S31prudynt restart >/dev/null 2>&1   # mit Zeitzone, sonst blendet prudynt UTC ein
 		else
 			papi '{"motion":{"enabled":true}}'; jct /etc/prudynt.json set motion.enabled true >/dev/null
 		fi

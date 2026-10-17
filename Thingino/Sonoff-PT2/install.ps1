@@ -154,7 +154,7 @@ for kv in "enabled false" "send2mqtt true" "frame_width $W" "frame_height $H" "r
 	jct /etc/prudynt.json set "motion.${kv% *}" "${kv#* }" >/dev/null || fail "cannot write motion.${kv% *}"
 done
 echo "--- Restart prudynt to apply motion settings ---"
-/etc/init.d/S31prudynt restart >/dev/null 2>&1
+TZ=$(cat /etc/TZ 2>/dev/null) /etc/init.d/S31prudynt restart >/dev/null 2>&1   # mit Zeitzone, sonst blendet prudynt UTC ein
 n=0
 while [ ! -S /run/prudynt/prudynt.sock ] || ! pidof prudynt >/dev/null 2>&1; do
 	n=$((n + 1)); [ $n -ge 30 ] && fail "prudynt did not come back after restart"
