@@ -1,2 +1,4 @@
 # keep camera-side shell scripts with LF line endings on every checkout
 *.sh text eol=lf
+Thingino/Sonoff-PT2/noise/noise text eol=lf
+Thingino/Sonoff-PT2/ptz-state text eol=lf
