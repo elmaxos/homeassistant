@@ -1,8 +1,8 @@
 - id: bilbut_sz_tuer
   alias: BILBUT_SZ_Tuer
   description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben: einfach Bettlicht an (1 %)/aus; halten heller (Licht aus: Baby wach); doppelt
-    Rauschen lauter (Rauschen aus: Kamera Preset 0). Unten: einfach Rauschen an/aus; halten dunkler bis 1 % (Licht aus: Baby schlaeft); doppelt
-    Rauschen leiser (Rauschen aus: Preset 1).'
+    Rauschen lauter +10 bis 80 (Rauschen aus: Kamera Preset 0). Unten: einfach Rauschen an/aus; halten dunkler bis 1 % (Licht aus: Baby schlaeft);
+    doppelt Rauschen leiser -10 bis 10 (Rauschen aus: Preset 1).'
   triggers:
   - trigger: state
     entity_id: event.schlafzimmer_bilbut_sz_tuer_taste_1
@@ -135,7 +135,7 @@
           target:
             entity_id: number.ing_sonoff_pt2_a574_noise_volume
           data:
-            value: '{{ ([20, (states(''number.ing_sonoff_pt2_a574_noise_volume'') | int(40)) + (20 if taste == ''oben'' else -20), 100] | sort)[1]
+            value: '{{ ([10, (states(''number.ing_sonoff_pt2_a574_noise_volume'') | int(40)) + (10 if taste == ''oben'' else -10), 80] | sort)[1]
               }}'
         else:
         - action: button.press

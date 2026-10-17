@@ -1,34 +1,38 @@
 #!/bin/sh
 # Rauschen (weiss/rosa/braun) in Endlosschleife ueber den Kamera-Lautsprecher (Thingino / prudynt).
-# Laeuft komplett auf der Kamera; HA startet/stoppt nur per MQTT (<hostname>/cmd, eval):
-#   noise start [lautstaerke]   noise stop   noise volume 0-100   noise color weiss|rosa|braun
-#   noise fade_in 0-30   noise fade_out 0-30   (Sekunden Ein-/Ausblenden)
-#   noise boot   noise status
+# Laeuft komplett auf der Kamera; HA steuert per MQTT (<hostname>/cmd, eval):
+#   noise start [vol]   noise stop   noise volume 0-80   noise color weiss|rosa|braun
+#   noise fade_in 0-30   noise fade_out 0-30   noise boot   noise status
 #
-# Wiedergabe: 60 s Material in 2-s-Stuecken, ohne prudynt-Wiederholung (loop=); das Skript haengt die Stuecke selbst
-# an (1 Stueck Vorrat) -> gleichmaessig, ohne Delle. STOP / "Ersetzen" raeumen prudynts Audio-Warteschlange nicht
-# zuverlaessig auf (getestet: STOP an audio_out und audio_out_ctrl, Audio-Thread-Neustart, kurze Stuecke, loop=).
-# Deshalb Stopp/Farbwechsel: sofort stumm (spk_vol 0), dann prudynt-Neustart (Bild ~10 s weg); der Neustart laedt
-# die gespeicherte Ansage-Lautstaerke aus /etc/prudynt.json.
-# Lautstaerke = Lautsprecher-Lautstaerke (audio.spk_vol, live, OHNE Audio-Thread-Neustart - der bringt Aussetzer);
-# beim Stopp wird die vorherige (Ansage-)Lautstaerke wiederhergestellt.
-# weiss erzeugt die Kamera aus /dev/urandom (halbe Amplitude); rosa/braun kommen einmalig von HA
-# (http://<broker>:8123/local/noise/<farbe>.pcm), Fallback weiss. Alles liegt in /tmp (Flash zu klein).
-# Hinweis: Mit eingeschaltetem Mikrofon (AAC-Encoder) hat die Wiedergabe auf dem T23N Aussetzer.
+# - Wiedergabe: 60 s Material in 2-s-Stuecken ohne prudynt-Wiederholung, das Skript haengt immer ein Stueck an.
+# - Lautstaerke = Lautsprecher-Lautstaerke audio.spk_vol, live per prudyntctl (ohne restart_thread -> sonst Aussetzer),
+#   in 10er-Schritten, max. 80. Jede Aenderung wird weich uebergeblendet (FADE_VOL s).
+# - Start blendet ein (FADE_IN s), Stopp/Farbwechsel blenden aus (FADE_OUT s), dann prudynt-Neustart: nur der leert
+#   prudynts Audio-Warteschlange zuverlaessig (STOP/Ersetzen/restart_thread tun es bei langen Wiedergaben nicht).
+#   Der Neustart laedt die gespeicherte Ansage-Lautstaerke aus /etc/prudynt.json; das Bild ist ~5-10 s weg.
+# - "start" bei laufendem Rauschen startet nichts neu, sondern passt nur die Lautstaerke an.
+# - Keine eigene Sperre: der MQTT-Dispatcher fuehrt Befehle nacheinander aus (eine mkdir-Sperre mit EXIT-trap
+#   wurde unter dem Dispatcher nicht freigegeben -> jeder Befehl wartete 40 s).
+# - weiss erzeugt die Kamera aus /dev/urandom (halbe Amplitude); rosa/braun einmalig von HA
+#   (http://<broker>:8123/local/noise/<farbe>.pcm), Fallback weiss. Alles in /tmp (Flash zu klein).
+# - Mit eingeschaltetem Mikrofon (AAC-Encoder) hat die Wiedergabe auf dem T23N Aussetzer -> Mikrofon aus.
 
 HOST=$(hostname)
 CONF=/etc/noise.conf
 PIDF=/run/noise.pid
+FADEP=/run/noise.fade.pid
 PREVF=/run/noise.prev_spk_vol
 DIR=/tmp/noise
 RATE=16000
 SECS=60
-BYTES=$((SECS * RATE * 2))
-CH=2                              # Sekunden pro Stueck
+CH=2
 NCH=$((SECS / CH))
+BYTES=$((SECS * RATE * 2))
 CHB=$((CH * RATE * 2))
+VMAX=80
+FADE_VOL=1.5
 
-VOL=35
+VOL=40
 COLOR=braun
 FADE_IN=5
 FADE_OUT=5
@@ -40,35 +44,28 @@ pub() {
 		-r -t "$HOST/state/$1" -m "$2" >/dev/null 2>&1
 }
 save() { printf 'VOL=%s\nCOLOR=%s\nFADE_IN=%s\nFADE_OUT=%s\n' "$VOL" "$COLOR" "$FADE_IN" "$FADE_OUT" > "$CONF"; }
-FADEP=/run/noise.fade.pid
-fade_kill() { [ -f "$FADEP" ] && kill "$(cat "$FADEP")" 2>/dev/null; rm -f "$FADEP"; }
-
-# Einblenden 0 -> Ziel in 0,25-s-Schritten; das Ziel wird jeden Schritt neu aus der Konfiguration gelesen,
-# damit eine Lautstaerke-Aenderung waehrend des Einblendens gilt
-fade_in() {
-	steps=$((FADE_IN * 4)); i=1
-	while [ $i -le $steps ]; do
-		v=$(sed -n 's/^VOL=//p' "$CONF"); v=${v:-$VOL}
-		spk_set $((v * i / steps)); sleep 0.25; i=$((i + 1))
-	done
-	v=$(sed -n 's/^VOL=//p' "$CONF"); spk_set "${v:-$VOL}"
-	rm -f "$FADEP"
-}
-
-# Ausblenden von der aktuellen Lautstaerke auf 0 (blockiert FADE_OUT Sekunden)
-fade_out() {
-	fade_kill
-	from=$(spk_get); from=${from:-$VOL}; steps=$((FADE_OUT * 4)); i=1
-	while [ $i -le $steps ]; do
-		spk_set $((from - from * i / steps)); sleep 0.25; i=$((i + 1))
-	done
-}
 running() { [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; }
 spk_get() { echo '{"audio":{"spk_vol":null}}' | prudyntctl json - 2>/dev/null | sed -n 's/.*"spk_vol":\([0-9]*\).*/\1/p'; }
 spk_set() { printf '{"audio":{"spk_vol":%s}}' "$1" | prudyntctl json - >/dev/null 2>&1; }
 pcm() { play $1 -f pcm -r "$RATE" "$2" >/dev/null 2>&1; }
+norm_vol() { v=$(( ($1 + 5) / 10 * 10 )); [ "$v" -gt $VMAX ] && v=$VMAX; [ "$v" -lt 0 ] && v=0; echo "$v"; }
 
-# legt $DIR/<farbe>.pcm an (60 s), gibt den Pfad aus
+fade_kill() { [ -f "$FADEP" ] && kill "$(cat "$FADEP")" 2>/dev/null; rm -f "$FADEP"; }
+
+# Lautstaerke von jetzt auf $2 in $1 Sekunden (0,25-s-Schritte); Ziel wird bei "einblenden" laufend aus CONF gelesen
+ramp() {
+	secs=$1; target=$2; follow=$3
+	from=$(spk_get); from=${from:-0}
+	steps=$(awk "BEGIN{print int($secs * 4 + 0.5)}"); [ "$steps" -lt 1 ] && steps=1
+	i=1
+	while [ $i -le $steps ]; do
+		[ -n "$follow" ] && { t=$(sed -n 's/^VOL=//p' "$CONF"); target=${t:-$target}; }
+		spk_set $((from + (target - from) * i / steps)); sleep 0.25; i=$((i + 1))
+	done
+	spk_set "$target"
+}
+ramp_bg() { fade_kill; ( ramp "$@" ) </dev/null >/dev/null 2>&1 & echo $! > "$FADEP"; }
+
 prepare() {
 	c=$1; f="$DIR/$c.pcm"
 	[ -f "$f" ] && [ -f "$DIR/${c}_$((NCH - 1)).pcm" ] && { echo "$f"; return 0; }
@@ -96,10 +93,10 @@ prepare() {
 loop() {
 	pre=${1%.pcm}
 	t0=$(date +%s)
-	pcm -A "${pre}_0.pcm"             # Stueck 0 (Warteschlange wurde vorher per STOP geleert)
+	pcm -A "${pre}_0.pcm"
 	n=1
 	while :; do
-		pcm -A "${pre}_$((n % NCH)).pcm"   # Stueck n (startet bei t0 + n*CH)
+		pcm -A "${pre}_$((n % NCH)).pcm"                  # Stueck n (startet bei t0 + n*CH)
 		target=$((t0 + n * CH)); now=$(date +%s)
 		[ "$target" -gt "$now" ] && sleep $((target - now))   # bis Stueck n laeuft -> 1 Stueck Vorrat
 		n=$((n + 1))
@@ -109,13 +106,12 @@ loop() {
 kill_loop() {
 	if running; then
 		p=$(cat "$PIDF")
-		pkill -P "$p" 2>/dev/null     # zuerst das wartende sleep, sonst haengt es an init
+		pkill -P "$p" 2>/dev/null                        # zuerst das wartende sleep
 		kill "$p" 2>/dev/null
 	fi
 	rm -f "$PIDF"
 }
 
-# prudynt neu starten und warten, bis es wieder laeuft (sonst geht ein direkt folgendes "start" ins Leere)
 restart_prudynt() {
 	/etc/init.d/S31prudynt restart >/dev/null 2>&1
 	i=0
@@ -126,72 +122,62 @@ restart_prudynt() {
 	sleep 2
 }
 
-# laufendes Rauschen sicher beenden: sofort stumm, dann Warteschlange per prudynt-Neustart leeren
-quiet_flush() {
+# laufendes Rauschen sauber beenden: ausblenden (Schleife schiebt noch nach), Schleife weg, stumm, Warteschlange leeren
+silence() {
+	fade_kill
+	[ "$FADE_OUT" -gt 0 ] && ramp "$FADE_OUT" 0
+	kill_loop
 	spk_set 0
 	restart_prudynt
 }
 
-start() {
-	if running; then
-		fade_out; kill_loop; quiet_flush   # ausblenden, solange noch nachgeschoben wird; dann Warteschlange leeren
-	else
-		[ -f "$PREVF" ] || spk_get > "$PREVF"   # Ansage-Lautstaerke merken
-		echo STOP > /run/prudynt/audio_out
-	fi
-	f=$(prepare "$COLOR") || { f=$(prepare weiss) && COLOR=weiss; } || exit 1
+start_fresh() {
+	[ -f "$PREVF" ] || spk_get > "$PREVF"              # Ansage-Lautstaerke merken
+	f=$(prepare "$COLOR") || { f=$(prepare weiss) && COLOR=weiss; } || return 1
 	spk_set 0
-	loop "$f" </dev/null >/dev/null 2>&1 &
+	( loop "$f" ) </dev/null >/dev/null 2>&1 &
 	echo $! > "$PIDF"
-	if [ "$FADE_IN" -gt 0 ]; then
-		fade_in </dev/null >/dev/null 2>&1 &
-		echo $! > "$FADEP"
-	else
-		spk_set "$VOL"
-	fi
+	if [ "$FADE_IN" -gt 0 ]; then ramp_bg "$FADE_IN" "$VOL" follow; else spk_set "$VOL"; fi
 	pub noise ON; pub noise_volume "$VOL"; pub noise_color "$COLOR"
-}
-
-stop() {
-	if running; then
-		pub noise OFF
-		fade_out                          # ausblenden, waehrend die Schleife noch Stuecke nachschiebt
-		kill_loop
-		quiet_flush                       # Warteschlange leeren, laedt die gespeicherte Ansage-Lautstaerke
-		rm -f "$PREVF"
-	elif [ -f "$PREVF" ]; then            # Schleife weg, Lautstaerke noch verstellt -> aufraeumen
-		quiet_flush; rm -f "$PREVF"
-	else
-		echo STOP > /run/prudynt/audio_out   # kein Rauschen: normaler Stopp fuer andere Sounds
-	fi
-	pub noise OFF
 }
 
 case "$1" in
 	start)
-		case "$2" in ''|*[!0-9]*) ;; *) VOL=$2 ;; esac
-		save; start ;;
+		case "$2" in ''|*[!0-9]*) ;; *) VOL=$(norm_vol "$2") ;; esac
+		VOL=$(norm_vol "$VOL"); save
+		if running; then ramp_bg "$FADE_VOL" "$VOL"; pub noise ON; pub noise_volume "$VOL"   # schon an: nur Lautstaerke
+		else start_fresh; fi ;;
 	stop)
-		stop ;;
+		if running; then
+			pub noise OFF; silence; rm -f "$PREVF"
+		elif [ -f "$PREVF" ]; then                          # Schleife weg, Lautstaerke noch verstellt
+			spk_set 0; restart_prudynt; rm -f "$PREVF"
+		else
+			echo STOP > /run/prudynt/audio_out             # kein Rauschen: normaler Stopp fuer andere Sounds
+		fi
+		pub noise OFF ;;
 	volume)
-		case "$2" in ''|*[!0-9]*) echo "noise volume 0-100" >&2; exit 1 ;; esac
-		VOL=$2; [ "$VOL" -gt 100 ] && VOL=100
-		save; pub noise_volume "$VOL"
-		running && { [ -f "$FADEP" ] && kill -0 "$(cat "$FADEP")" 2>/dev/null || spk_set "$VOL"; } ;;
+		case "$2" in ''|*[!0-9]*) echo "noise volume 0-$VMAX" >&2; exit 1 ;; esac
+		VOL=$(norm_vol "$2"); save; pub noise_volume "$VOL"
+		running && ramp_bg "$FADE_VOL" "$VOL" ;;
 	color)
-		case "$2" in weiss|rosa|braun) COLOR=$2 ;; *) echo "noise color weiss|rosa|braun" >&2; exit 1 ;; esac
-		save; pub noise_color "$COLOR"
-		running && start ;;
+		case "$2" in weiss|rosa|braun) ;; *) echo "noise color weiss|rosa|braun" >&2; exit 1 ;; esac
+		[ "$2" = "$COLOR" ] && { pub noise_color "$COLOR"; exit 0; }
+		COLOR=$2; save; pub noise_color "$COLOR"
+		if running; then silence; start_fresh; fi ;;
 	fade_in|fade_out)
 		case "$2" in ''|*[!0-9]*) echo "noise $1 0-30" >&2; exit 1 ;; esac
 		v=$2; [ "$v" -gt 30 ] && v=30
-		[ "$1" = fade_in ] && FADE_IN=$v || FADE_OUT=$v
+		if [ "$1" = fade_in ]; then FADE_IN=$v; else FADE_OUT=$v; fi
 		save; pub "noise_$1" "$v" ;;
 	boot)
-		rm -f "$PIDF" "$PREVF" "$FADEP"; pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR"
+		rm -rf "$PIDF" "$PREVF" "$FADEP" /run/noise.lock
+		VOL=$(norm_vol "$VOL"); save
+		pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR"
 		pub noise_fade_in "$FADE_IN"; pub noise_fade_out "$FADE_OUT" ;;
 	status)
-		running && s=an || s=aus; echo "$s, Lautstaerke $VOL, Farbe $COLOR, Ein/Aus $FADE_IN/$FADE_OUT s, Lautsprecher jetzt $(spk_get)" ;;
+		running && s=an || s=aus
+		echo "$s, Lautstaerke $VOL, Farbe $COLOR, Ein/Aus $FADE_IN/$FADE_OUT s, Lautsprecher jetzt $(spk_get)" ;;
 	*)
 		echo "Usage: noise start [vol]|stop|volume N|color weiss|rosa|braun|fade_in S|fade_out S|boot|status" >&2; exit 1 ;;
 esac

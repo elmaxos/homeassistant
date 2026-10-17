@@ -566,7 +566,7 @@ if [ -x /usr/sbin/noise ]; then
 		"{\"name\":\"Rauschen\",\"unique_id\":\"${CAM}_noise\",\"icon\":\"mdi:waveform\",\"command_topic\":\"$TOPIC\",\"payload_on\":\"noise start\",\"payload_off\":\"noise stop\",\"state_topic\":\"$CAM/state/noise\",\"state_on\":\"ON\",\"state_off\":\"OFF\",$COMMON}"
 	/usr/sbin/noise status 2>/dev/null | grep -q '^an' && pub_state noise ON || pub_state noise OFF
 	echo "  [switch] Rauschen"
-	pub_number "noise_volume" "Rauschen Lautstärke" "noise volume {{ value | int }}" 0 100 5 "" "${NOISE_VOL:-35}"
+	pub_number "noise_volume" "Rauschen Lautstärke" "noise volume {{ value | int }}" 0 80 10 "" "${NOISE_VOL:-40}"
 	pub_select "noise_color" "Rauschen Farbe" "noise color {{ value }}" '["weiss","rosa","braun"]' "${NOISE_COLOR:-braun}"
 	NOISE_FIN=$(sed -n 's/^FADE_IN=//p' /etc/noise.conf 2>/dev/null); NOISE_FOUT=$(sed -n 's/^FADE_OUT=//p' /etc/noise.conf 2>/dev/null)
 	pub_number "noise_fade_in" "Rauschen Einblenden" "noise fade_in {{ value | int }}" 0 30 1 "s" "${NOISE_FIN:-5}"

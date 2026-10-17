@@ -19,7 +19,7 @@ configs = {
         "name": "Rauschen Lautstärke", "unique_id": HOST + "_noise_volume",
         "default_entity_id": "number.%s_noise_volume" % OBJ, "icon": "mdi:volume-medium",
         "command_topic": cmd, "command_template": "noise volume {{ value | int }}",
-        "state_topic": st + "noise_volume", "min": 0, "max": 100, "step": 5, "mode": "slider", "device": dev,
+        "state_topic": st + "noise_volume", "min": 0, "max": 80, "step": 10, "mode": "slider", "device": dev,
     },
     "select/%s_noise_color/config" % HOST: {
         "name": "Rauschen Farbe", "unique_id": HOST + "_noise_color",
