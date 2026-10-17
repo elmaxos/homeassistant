@@ -44,7 +44,9 @@ holt die URL -> per MQTT bekommt die Kamera den Befehl `play '<url>'` (siehe Ord
   gemeldet hat (`last_reported`).
 - Begrüßung nach Uhrzeit: bis 11 Uhr „Guten Morgen“, bis 18 Uhr „Hallo“, danach „Guten Abend“.
 
-Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `kamera4420` = `ing-sonoff-pt2-4420`, `handy` = Android-TTS auf
+Ziele im Hauptskript: `wohnzimmer` = `ing-sonoff-pt2-3684`, `schlafzimmer` = `ing-sonoff-pt2-a574` (ohne Weißlicht;
+wird übersprungen, solange `input_boolean.baby_schlaeft` an ist; bisher von keiner Automation benutzt),
+`unterstand` = `ing-sonoff-pt2-26a4`, `kamera4420` = `ing-sonoff-pt2-4420`, `handy` = Android-TTS auf
 `notify.mobile_app_sm_g781b` (nur der Text, kein Sound, kein Licht; Piper wird dafür nicht aufgerufen).
 Neue Kamera: Eintrag mit `topic`, `licht` (Weißlicht-Switch) und optional `bewegung` ergänzen und die Option
 in allen `kameras`-Selektoren nachziehen.

@@ -21,7 +21,11 @@ tts_cam_sound_text:
           options:
           - label: Wohnzimmer (3684)
             value: wohnzimmer
-          - label: SONOFF PT2 4 (4420)
+          - label: Schlafzimmer (a574) – nicht wenn baby_schlaeft an
+            value: schlafzimmer
+          - label: Unterstand (26a4)
+            value: unterstand
+          - label: Kamera 4420
             value: kamera4420
           - label: Handy Max (nur Text, Android-TTS)
             value: handy
@@ -107,10 +111,13 @@ tts_cam_sound_text:
         boolean: null
   sequence:
   - variables:
-      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %}{{ [k] if k is string else k }}'
+      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %}{% set k = [k] if k is string else k %}{{ k | reject(''eq'', ''schlafzimmer'') | list if is_state(''input_boolean.baby_schlaeft'',
+        ''on'') else k }}'
       melder:
         wohnzimmer: binary_sensor.wz_myg_sofa_belegung
-      bewegungsmelder: '{% set ns = namespace(m=[]) %}{% for k in auswahl %}{% if k in melder %}{% set ns.m = ns.m + [melder[k]] %}{% endif %}{% endfor %}{{ ns.m }}'
+        schlafzimmer: binary_sensor.sz_myg_wand_belegung
+      bewegungsmelder: '{% set ns = namespace(m=[]) %}{% for k in auswahl %}{% if k in melder %}{% set ns.m = ns.m + [melder[k]] %}{% endif %}{% endfor %}{{ ns.m
+        }}'
   - if:
     - condition: template
       value_template: '{{ (warten | default(false)) and (bewegungsmelder | length > 0) }}'

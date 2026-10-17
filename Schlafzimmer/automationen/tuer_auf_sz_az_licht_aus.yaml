@@ -1,0 +1,50 @@
+- id: '1776379791721'
+  alias: Tuer_auf_sz_az_licht_aus
+  description: 'Nur wenn baby_schlaeft an ist: beim Oeffnen der Schlafzimmertuer Arbeitszimmerlicht dimmen/aus, danach (Tuer zu oder 30 s) vorherigen Zustand wiederherstellen.'
+  triggers:
+  - entity_id:
+    - binary_sensor.sz_par_tuer_contact
+    trigger: state
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.baby_schlaeft
+    state: 'on'
+  actions:
+  - data:
+      scene_id: vor_dem_dimmen
+      snapshot_entities:
+      - light.kajplats_gu10_ws_575lm
+      - light.kajplats_gu10_ws_575lm_2
+      - light.kajplats_gu10_ws_575lm_3
+    action: scene.create
+  - target:
+      entity_id:
+      - light.kajplats_gu10_ws_575lm_2
+      - light.kajplats_gu10_ws_575lm_3
+    action: light.turn_off
+  - if:
+    - condition: state
+      entity_id: light.kajplats_gu10_ws_575lm
+      state:
+      - 'on'
+    then:
+    - data:
+        brightness_pct: 1
+      action: light.turn_on
+      target:
+        entity_id: light.kajplats_gu10_ws_575lm
+  - wait_for_trigger:
+    - entity_id: binary_sensor.sz_par_tuer_contact
+      to: 'off'
+      trigger: state
+    timeout:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+    continue_on_timeout: true
+  - target:
+      entity_id: scene.vor_dem_dimmen
+    action: scene.turn_on
+  mode: restart

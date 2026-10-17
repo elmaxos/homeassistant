@@ -1,0 +1,28 @@
+- id: baby_schlaeft_zeitplan
+  alias: Baby schlaeft – Zeitplan
+  description: Setzt input_boolean.baby_schlaeft jeden Tag um 22:00 an und um 09:00 aus.
+  triggers:
+  - trigger: time
+    at: '22:00:00'
+    id: an
+  - trigger: time
+    at: 09:00:00
+    id: aus
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: an
+      sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.baby_schlaeft
+    - conditions:
+      - condition: trigger
+        id: aus
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.baby_schlaeft
+  mode: single

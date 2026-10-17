@@ -1,6 +1,7 @@
 tts_cam_ausgabe:
   alias: tts_cam_ausgabe
-  description: 'Intern: spielt Sound und Text auf Kameras/Handy ab, eine Ansage nach der anderen. Nicht direkt aufrufen, sondern script.tts_cam_sound_text verwenden.'
+  description: 'Intern: spielt Sound und Text auf Kameras/Handy ab, eine Ansage nach der anderen. Nicht direkt aufrufen, sondern script.tts_cam_sound_text verwenden.
+    Schlafzimmer wird uebersprungen, solange input_boolean.baby_schlaeft an ist, und schaltet nie das Weisslicht ein.'
   fields:
     message:
       name: Nachricht
@@ -21,7 +22,11 @@ tts_cam_ausgabe:
           options:
           - label: Wohnzimmer (3684)
             value: wohnzimmer
-          - label: SONOFF PT2 4 (4420)
+          - label: Schlafzimmer (a574) – nicht wenn baby_schlaeft an
+            value: schlafzimmer
+          - label: Unterstand (26a4)
+            value: unterstand
+          - label: Kamera 4420
             value: kamera4420
           - label: Handy Max (nur Text, Android-TTS)
             value: handy
@@ -108,6 +113,12 @@ tts_cam_ausgabe:
         kamera4420:
           topic: ing-sonoff-pt2-4420/cmd
           licht: switch.ing_sonoff_pt2_4420_white_light
+        schlafzimmer:
+          topic: ing-sonoff-pt2-a574/cmd
+          bewegung: binary_sensor.sz_myg_wand_belegung
+        unterstand:
+          topic: ing-sonoff-pt2-26a4/cmd
+          licht: switch.ing_sonoff_pt2_26a4_white_light
       sounds:
         chime:
           datei: /usr/share/sounds/chime_3.opus
@@ -130,15 +141,20 @@ tts_cam_ausgabe:
         12uhr:
           datei: '''http://192.168.0.48:8123/local/sounds/12uhr.wav'''
           dauer: 3
-      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %} {{ [k] if k is string else k }}'
+      auswahl: '{% set k = kameras | default([''wohnzimmer'']) %}{% set k = [k] if k is string else k %}{{ k | reject(''eq'', ''schlafzimmer'') | list if is_state(''input_boolean.baby_schlaeft'',
+        ''on'') else k }}'
       cams: '{{ auswahl | reject(''eq'', ''handy'') | list }}'
       s_key: '{{ sound | default(''chime'') }}'
       datei: '{{ sounds[s_key].datei if s_key in sounds else '''' }}'
-      effektive_pause: "{% if sound_pause is defined and sound_pause is not none and sound_pause != '' %}\n  {{ sound_pause | float }}\n{% elif s_key in sounds and 'dauer' in sounds[s_key] %}\n  {{ sounds[s_key].dauer | float }}\n{% else %}\n  2.0\n{% endif %}"
-      text: '{% set t = message | default('''') | trim | replace(''"'', '''') | replace(''\n'', '' '') %} {{ t }}{% if t != '''' and zweimal | default(false) %} ... Ich wiederhole. {{ t }}{% endif %}'
+      effektive_pause: "{% if sound_pause is defined and sound_pause is not none and sound_pause != '' %}\n  {{ sound_pause | float }}\n{% elif s_key in sounds and\
+        \ 'dauer' in sounds[s_key] %}\n  {{ sounds[s_key].dauer | float }}\n{% else %}\n  2.0\n{% endif %}"
+      text: '{% set t = message | default('''') | trim | replace(''"'', '''') | replace(''\n'', '' '') %} {{ t }}{% if t != '''' and zweimal | default(false) %} ...
+        Ich wiederhole. {{ t }}{% endif %}'
   - variables:
-      lichter: "{% set ns = namespace(l=[]) %} {% if licht | default(true) %}{% for k in auswahl %}\n  {% if k in geraete and 'licht' in geraete[k] %}\n    {% set ns.l = ns.l + [geraete[k].licht] %}\n  {% endif %}\n{% endfor %}{% endif %} {{ ns.l }}"
-      bewegungsmelder: "{% set ns = namespace(m=[]) %} {% for k in auswahl %}\n  {% if k in geraete and 'bewegung' in geraete[k] %}\n    {% set ns.m = ns.m + [geraete[k].bewegung] %}\n  {% endif %}\n{% endfor %} {{ ns.m }}"
+      lichter: "{% set ns = namespace(l=[]) %} {% if licht | default(true) %}{% for k in auswahl %}\n  {% if k in geraete and 'licht' in geraete[k] %}\n    {% set\
+        \ ns.l = ns.l + [geraete[k].licht] %}\n  {% endif %}\n{% endfor %}{% endif %} {{ ns.l }}"
+      bewegungsmelder: "{% set ns = namespace(m=[]) %} {% for k in auswahl %}\n  {% if k in geraete and 'bewegung' in geraete[k] %}\n    {% set ns.m = ns.m + [geraete[k].bewegung]\
+        \ %}\n  {% endif %}\n{% endfor %} {{ ns.m }}"
   - if:
     - condition: template
       value_template: '{{ text == '''' and datei == '''' }}'
