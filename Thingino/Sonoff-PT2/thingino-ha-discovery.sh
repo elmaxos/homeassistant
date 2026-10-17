@@ -211,6 +211,13 @@ pub_number() {
 	echo "  [number] $2 ($4-$5, current: ${8:-?})"
 }
 
+pub_sensor() {
+	# uid name icon  (Wert kommt vom Skript auf der Kamera nach $CAM/state/<uid>)
+	pub "homeassistant/sensor/${CAM}_${1}/config" \
+		"{\"name\":\"$2\",\"unique_id\":\"${CAM}_${1}\",\"state_topic\":\"$CAM/state/$1\",\"icon\":\"$3\",$COMMON}"
+	echo "  [sensor] $2"
+}
+
 pub_select() {
 	# uid name command_template options_json initial
 	pub "homeassistant/select/${CAM}_${1}/config" \
@@ -404,7 +411,13 @@ case "$CMD" in
 
 	# ---------- Sound ----------
 	play)      play "$VAL" >/dev/null 2>&1 ;;
-	play_stop) play stop >/dev/null 2>&1 ;;
+	play_stop)
+		# laufendes Rauschen sauber beenden (stumm + prudynt-Neustart), sonst normaler Stopp
+		if [ -x /usr/sbin/noise ] && /usr/sbin/noise status 2>/dev/null | grep -q '^an'; then
+			/usr/sbin/noise stop >/dev/null 2>&1
+		else
+			play stop >/dev/null 2>&1
+		fi ;;
 
 	# ---------- System ----------
 	reboot)    reboot ;;
@@ -545,6 +558,23 @@ fi
 
 echo "--- Sounds ---"
 pub_button "play_stop" "Stop Sound" "$T play_stop"
+
+# Rauschen (/usr/sbin/noise, siehe noise/README.md): Zustand meldet das Skript selbst nach $CAM/state/noise*
+if [ -x /usr/sbin/noise ]; then
+	NOISE_VOL=$(sed -n 's/^VOL=//p' /etc/noise.conf 2>/dev/null); NOISE_COLOR=$(sed -n 's/^COLOR=//p' /etc/noise.conf 2>/dev/null)
+	pub "homeassistant/switch/${CAM}_noise/config" \
+		"{\"name\":\"Rauschen\",\"unique_id\":\"${CAM}_noise\",\"icon\":\"mdi:waveform\",\"command_topic\":\"$TOPIC\",\"payload_on\":\"noise start\",\"payload_off\":\"noise stop\",\"state_topic\":\"$CAM/state/noise\",\"state_on\":\"ON\",\"state_off\":\"OFF\",$COMMON}"
+	/usr/sbin/noise status 2>/dev/null | grep -q '^an' && pub_state noise ON || pub_state noise OFF
+	echo "  [switch] Rauschen"
+	pub_number "noise_volume" "Rauschen Lautstärke" "noise volume {{ value | int }}" 0 100 5 "" "${NOISE_VOL:-35}"
+	pub_select "noise_color" "Rauschen Farbe" "noise color {{ value }}" '["weiss","rosa","braun"]' "${NOISE_COLOR:-braun}"
+fi
+
+# PTZ-Position und erkanntes Preset (/usr/sbin/ptz-state meldet alle 3 s bei Aenderung)
+if [ -x /usr/sbin/ptz-state ]; then
+	pub_sensor "ptz_position" "PTZ Position" "mdi:crosshairs-gps"
+	pub_sensor "ptz_preset" "PTZ Preset" "mdi:camera-marker-outline"
+fi
 SOUNDS=$(ls /usr/share/sounds/*.opus 2>/dev/null | sed 's|.*/||')
 if [ -n "$SOUNDS" ]; then
 	OPTS=$(echo "$SOUNDS" | sed 's/.*/"&"/' | tr '\n' ',' | sed 's/,$//')

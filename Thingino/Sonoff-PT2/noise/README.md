@@ -1,22 +1,41 @@
-# Rauschen auf der Kamera (Stand 16.10.2026, in Arbeit)
+# Rauschen auf der Kamera (weiß / rosa / braun)
 
-Weißes, rosa oder braunes Rauschen in Endlosschleife über den Kamera-Lautsprecher. Läuft komplett auf der Kamera,
-HA startet/stoppt nur per MQTT (`<hostname>/cmd`, Payload wird per `eval` ausgeführt). Eingerichtet auf `ing-sonoff-pt2-a574` (Schlafzimmer).
+Endlos-Rauschen über den Kamera-Lautsprecher, z. B. zum Einschlafen. Läuft komplett auf der Kamera – HA startet/stoppt nur
+per MQTT (`<hostname>/cmd`, Payload wird per `eval` ausgeführt). Hängt HA oder startet neu, läuft das Rauschen weiter.
+Im Einsatz auf `ing-sonoff-pt2-a574` (Schlafzimmer). Der Installer (`../install.ps1`) spielt es auf jede neue Kamera.
 
-- `noise` → `/usr/sbin/noise` (Befehle: `start [vol]`, `stop`, `volume 0-100`, `color weiss|rosa|braun`, `boot`, `status`),
-  dazu `/etc/init.d/S99noise` (`start) (sleep 20; /usr/sbin/noise boot) &`) und `/etc/noise.conf` (VOL=35, COLOR=braun).
-- `noise_gen.py` (auf HA ausführen) erzeugt `/config/www/noise/rosa_<k>.pcm`/`braun_<k>.pcm`; benutzt werden nur die Stufe-7-Dateien,
-  umbenannt in `rosa.pcm`/`braun.pcm` (60 s, 16 kHz, s16le mono, nahtlos). Weiß erzeugt die Kamera selbst (halbe Amplitude).
-- `noise_discovery.py <hostname>` (auf HA, braucht `SUPERVISOR_TOKEN`) legt per MQTT-Discovery (retain) an:
-  `switch.<host>_noise`, `number.<host>_noise_volume`, `select.<host>_noise_color`.
+## Dateien
 
-Erkenntnisse (prudynt-Version 2026-03):
-- Eine laufende Wiedergabe lässt sich weder per `STOP` (weder `audio_out` noch `audio_out_ctrl`) noch per Audio-Thread-Neustart
-  abbrechen; `vol=` bei PLAY wird ignoriert. Stopp = Lautsprecher sofort stumm (`spk_vol 0`) + prudynt-Neustart
-  (leert die Warteschlange, Bild ~10 s weg, lädt die Ansage-Lautstärke aus `/etc/prudynt.json`).
-- Lautstärke = `audio.spk_vol` live per `prudyntctl` **ohne** `restart_thread` (mit Neustart des Audio-Threads gab es Aussetzer).
-- 5-s-Stücke statt einer Datei mit `loop=` schwankten und hatten Aussetzer → eine 60-s-Datei mit `loop=32`.
-- **Aussetzer im Raum kamen vom Mikrofon-Encoder** (AAC 48 kHz, >90 % Frames verworfen): Mikrofon an a574 ausgeschaltet
-  (`switch.ing_sonoff_pt2_a574_mic`), seitdem sauber.
+| Datei | Ziel | Zweck |
+|---|---|---|
+| `noise` | `/usr/sbin/noise` | `start [vol]`, `stop`, `volume 0-100`, `color weiss\|rosa\|braun`, `boot`, `status` |
+| – | `/etc/init.d/S99noise` | meldet 20 s nach dem Booten „aus“ + Lautstärke/Farbe an HA (legt der Installer an) |
+| – | `/etc/noise.conf` | `VOL=35`, `COLOR=braun` (zuletzt gewählt) |
+| `noise_gen.py` | einmal auf HA ausführen | erzeugt `/config/www/noise/rosa.pcm` und `braun.pcm` (60 s, 16 kHz, s16le mono, nahtlos) |
+| `noise_discovery.py` | nur für Kameras mit altem Discovery-Skript | legt die drei HA-Entitäten per Discovery an (`<host> <device-identifier>`) |
 
-Offen: „Stop Sound“ (`thingino-cmd play_stop`) nutzt noch das wirkungslose `play stop`; Einbindung in `install.ps1`.
+HA-Entitäten (vom Discovery-Skript `../thingino-ha-discovery.sh`, wenn `/usr/sbin/noise` existiert):
+`switch.<host>_noise` (Rauschen), `number.<host>_noise_volume` (0–100), `select.<host>_noise_color`.
+„Stop Sound“ (`thingino-cmd play_stop`) beendet ein laufendes Rauschen ebenfalls.
+
+## Wie es funktioniert (und warum so)
+
+- **Abspielen:** 60 s Material in 2-s-Stücken, das Skript hängt immer ein Stück an (1 Stück Vorrat). Kein `loop=` von prudynt.
+  rosa/braun lädt die Kamera einmal von HA (`http://<broker>:8123/local/noise/<farbe>.pcm`) nach `/tmp`, weiß erzeugt sie
+  selbst aus `/dev/urandom` (halbe Amplitude, etwa so laut wie rosa/braun). Fallback ohne HA: weiß. Flash ist zu klein (~80 KB frei).
+- **Lautstärke:** = Lautsprecher-Lautstärke `audio.spk_vol`, live per `prudyntctl`, **ohne** `restart_thread`
+  (mit Audio-Thread-Neustart gab es Aussetzer). Nicht gespeichert – die Ansage-Lautstärke in `/etc/prudynt.json` bleibt.
+- **Stopp / Farbwechsel:** sofort stumm (`spk_vol 0`), dann **prudynt-Neustart** (Bild ~5–10 s weg). Der Neustart leert
+  die Audio-Warteschlange und lädt die gespeicherte Ansage-Lautstärke.
+- **Überblendung** am Dateiende mit konstanter Leistung (sin/cos). Linear gab alle 60 s eine hörbare Delle (~3 dB).
+
+## Erkenntnisse zu prudynt (Version 2026-03), alle per Hörtest im Raum geprüft
+
+- `STOP` (an `audio_out` wie `play stop`, oder an `audio_out_ctrl`), ein PLAY ohne `append` („Ersetzen“) und
+  `restart_thread 4` beenden eine **laufende lange** Wiedergabe nicht zuverlässig. prudynt schiebt Dateien blockierend
+  (`AudioOutputWorker::enqueuePcmBlocking`) in einen kleinen Puffer; `STOP` leert nur den Puffer (`clearQueue`).
+  Bei `loop=` kommt nach `STOP` die nächste Wiederholung, bei Stücken/Farbwechseln blieben Reste hängen. Kurze
+  Einzel-Sounds (Opus, TTS) lassen sich dagegen stoppen. Sicher stoppt nur ein prudynt-Neustart.
+- `vol=` im PLAY-Befehl wird ignoriert.
+- **Mikrofon aus!** Der AAC-Mikrofon-Encoder (48 kHz) verwirft >90 % seiner Frames („sink clogged“) und verursacht
+  Aussetzer in der Wiedergabe. Mit ausgeschaltetem Mikrofon (HA-Schalter „Mic“) läuft das Rauschen sauber.

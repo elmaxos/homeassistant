@@ -260,3 +260,13 @@ sits permanently in D state and adds ~1 to it).
 - Lower resolution does not reduce CPU (hardware encoder); it only halves WiFi traffic. All cameras stay at 1080p/3000.
 - A viewer of the main stream costs only ~4–6 %.
 - HA discovery state loop: every 60 s (was 20 s).
+
+## Zusatzfunktionen (vom Installer mit eingerichtet)
+
+- **Rauschen** (`noise/`): weiß/rosa/braun in Endlosschleife, per MQTT/HA steuerbar – Details in [noise/README.md](noise/README.md).
+  Einmalig auf HA `noise/noise_gen.py` ausführen (erzeugt rosa/braun unter `/config/www/noise/`).
+- **PTZ-Position und Preset** (`ptz-state`): meldet `motors -p` und das passende Preset aus `/etc/ptz_presets.conf`
+  (Toleranz 10 Schritte, sonst „frei“) nach `<host>/state/ptz_position` und `.../ptz_preset`; Abfrage alle 3 s, Meldung bei
+  Änderung und jede Minute. HA-Sensoren `sensor.<host>_ptz_position` / `_ptz_preset`. Für Kameras mit altem Discovery-Skript:
+  `ptz_discovery.py <host> <device-identifier>` auf HA.
+- **Stop Sound** beendet auch ein laufendes Rauschen.

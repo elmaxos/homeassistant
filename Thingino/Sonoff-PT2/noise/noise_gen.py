@@ -1,6 +1,7 @@
-"""Erzeugt rosa und braunes Rauschen (60 s, 16 kHz, s16le mono) in 8 Lautstaerkestufen (je 6 dB)
-nach /config/www/noise/<farbe>_<stufe>.pcm. Stufe 7 = Spitze ~ -1 dBFS, Stufe k = 7 - k mal 6 dB leiser.
-Endlos-Schleife ohne Knacken: Anfang und Ende werden ueber 0,5 s ueberblendet."""
+"""Erzeugt rosa und braunes Rauschen (60 s, 16 kHz, s16le mono) nach /config/www/noise/<farbe>.pcm
+(Spitze ~ -1 dBFS; die Lautstaerke regelt die Kamera ueber spk_vol).
+Endlos-Schleife ohne Knacken und ohne Lautstaerke-Delle: Ende und Anfang werden ueber 0,5 s mit konstanter
+Leistung ueberblendet (sin/cos statt linear - linear ergibt bei unkorrelierten Signalen ~3 dB Einbruch in der Mitte)."""
 import array, math, os, random
 
 RATE, SECS = 16000, 60
@@ -36,8 +37,8 @@ def loopable(x):
     n = len(x) - XF
     y = x[XF:XF + n]
     for i in range(XF):
-        a = i / XF
-        y[n - XF + i] = x[XF + n - XF + i] * (1 - a) + x[i] * a
+        a = (i + 0.5) / XF * math.pi / 2
+        y[n - XF + i] = x[XF + n - XF + i] * math.cos(a) + x[i] * math.sin(a)
     return y[:n]
 
 
@@ -46,12 +47,12 @@ for name, gen in (("rosa", pink), ("braun", brown)):
     m = sum(x) / len(x)
     x = [v - m for v in x]  # DC weg (wichtig bei braun)
     peak = max(abs(v) for v in x)
-    for k in range(8):
-        scale = 0.89 * 32767 / peak * 10 ** (-(7 - k) * 6 / 20)
-        a = array.array("h", (max(-32768, min(32767, int(v * scale))) for v in x))
-        a = a[:N] if len(a) >= N else a + array.array("h", [0] * (N - len(a)))
-        with open("%s/%s_%d.pcm" % (OUT, name, k), "wb") as f:
-            a.tofile(f)
+    scale = 0.89 * 32767 / peak
+    a = array.array("h", (max(-32768, min(32767, int(v * scale))) for v in x))
+    a = a[:N] if len(a) >= N else a + array.array("h", [0] * (N - len(a)))
+    with open("%s/%s.pcm.tmp" % (OUT, name), "wb") as f:
+        a.tofile(f)
+    os.replace("%s/%s.pcm.tmp" % (OUT, name), "%s/%s.pcm" % (OUT, name))
     rms = math.sqrt(sum(v * v for v in x) / len(x)) / peak
     print(name, "fertig, RMS/Peak = %.2f" % rms)
 print(sorted(os.listdir(OUT)))

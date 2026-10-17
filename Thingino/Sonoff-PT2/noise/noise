@@ -4,24 +4,28 @@
 #   noise start [lautstaerke]   noise stop   noise volume 0-100   noise color weiss|rosa|braun
 #   noise boot   noise status
 #
-# prudynt (Stand 2026-03) bricht eine laufende Wiedergabe weder per STOP noch per Audio-Thread-Neustart ab
-# und ignoriert vol= bei PLAY. Deshalb:
-#   - abgespielt wird EINE 60-s-Datei mit prudynt-Wiederholung (loop=32 = 32 min), kurz vor Ende wird der
-#     naechste Block angehaengt -> gleichmaessig, ohne Uebergaenge (5-s-Stuecke schwankten und setzten aus)
-#   - Lautstaerke = Lautsprecher-Lautstaerke (audio.spk_vol, live), solange das Rauschen laeuft
-#   - Stopp: sofort stumm (spk_vol 0), dann prudynt-Neustart im Hintergrund (leert die Warteschlange, laedt die
-#     gespeicherte Ansage-Lautstaerke neu). Das Kamerabild ist dabei ~10 s weg.
-# weiss wird auf der Kamera aus /dev/urandom erzeugt; rosa/braun kommen einmalig von HA
+# Wiedergabe: 60 s Material in 2-s-Stuecken, ohne prudynt-Wiederholung (loop=); das Skript haengt die Stuecke selbst
+# an (1 Stueck Vorrat) -> gleichmaessig, ohne Delle. STOP / "Ersetzen" raeumen prudynts Audio-Warteschlange nicht
+# zuverlaessig auf (getestet: STOP an audio_out und audio_out_ctrl, Audio-Thread-Neustart, kurze Stuecke, loop=).
+# Deshalb Stopp/Farbwechsel: sofort stumm (spk_vol 0), dann prudynt-Neustart (Bild ~10 s weg); der Neustart laedt
+# die gespeicherte Ansage-Lautstaerke aus /etc/prudynt.json.
+# Lautstaerke = Lautsprecher-Lautstaerke (audio.spk_vol, live, OHNE Audio-Thread-Neustart - der bringt Aussetzer);
+# beim Stopp wird die vorherige (Ansage-)Lautstaerke wiederhergestellt.
+# weiss erzeugt die Kamera aus /dev/urandom (halbe Amplitude); rosa/braun kommen einmalig von HA
 # (http://<broker>:8123/local/noise/<farbe>.pcm), Fallback weiss. Alles liegt in /tmp (Flash zu klein).
+# Hinweis: Mit eingeschaltetem Mikrofon (AAC-Encoder) hat die Wiedergabe auf dem T23N Aussetzer.
 
 HOST=$(hostname)
 CONF=/etc/noise.conf
 PIDF=/run/noise.pid
+PREVF=/run/noise.prev_spk_vol
 DIR=/tmp/noise
 RATE=16000
 SECS=60
-LOOPS=32
 BYTES=$((SECS * RATE * 2))
+CH=2                              # Sekunden pro Stueck
+NCH=$((SECS / CH))
+CHB=$((CH * RATE * 2))
 
 VOL=35
 COLOR=braun
@@ -34,19 +38,20 @@ pub() {
 }
 save() { printf 'VOL=%s\nCOLOR=%s\n' "$VOL" "$COLOR" > "$CONF"; }
 running() { [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; }
-
 spk_get() { echo '{"audio":{"spk_vol":null}}' | prudyntctl json - 2>/dev/null | sed -n 's/.*"spk_vol":\([0-9]*\).*/\1/p'; }
 spk_set() { printf '{"audio":{"spk_vol":%s}}' "$1" | prudyntctl json - >/dev/null 2>&1; }
+pcm() { play $1 -f pcm -r "$RATE" "$2" >/dev/null 2>&1; }
 
 # legt $DIR/<farbe>.pcm an (60 s), gibt den Pfad aus
 prepare() {
 	c=$1; f="$DIR/$c.pcm"
-	[ -f "$f" ] && [ "$(wc -c < "$f")" -ge "$BYTES" ] && { echo "$f"; return 0; }
+	[ -f "$f" ] && [ -f "$DIR/${c}_$((NCH - 1)).pcm" ] && { echo "$f"; return 0; }
 	mkdir -p "$DIR"
 	case "$c" in
 		rosa|braun)
-			curl -s -f -m 30 -o "$f.tmp" "http://$(cfg host):8123/local/noise/$c.pcm" 				&& [ "$(wc -c < "$f.tmp")" -ge "$BYTES" ] || { rm -f "$f.tmp"; return 1; } ;;
-		*)  # weiss mit halber Amplitude (jedes Byte nur 0..63 / 192..255): etwa so laut wie rosa/braun, weniger scharf
+			curl -s -f -m 30 -o "$f.tmp" "http://$(cfg host):8123/local/noise/$c.pcm" \
+				&& [ "$(wc -c < "$f.tmp")" -ge "$BYTES" ] || { rm -f "$f.tmp"; return 1; } ;;
+		*)	# halbe Amplitude: jedes Byte nur 0..63 / 192..255 (etwa so laut wie rosa/braun, weniger scharf)
 			set2=""; i=0
 			while [ $i -lt 256 ]; do
 				j=$(( i % 128 )); [ $j -ge 64 ] && j=$(( j + 128 ))
@@ -54,38 +59,37 @@ prepare() {
 			done
 			head -c "$BYTES" /dev/urandom | tr '\000-\377' "$set2" > "$f.tmp" ;;
 	esac
-	mv "$f.tmp" "$f"; echo "$f"
+	mv "$f.tmp" "$f"
+	i=0
+	while [ $i -lt $NCH ]; do
+		dd if="$f" of="$DIR/${c}_$i.pcm" bs=$CHB skip=$i count=1 2>/dev/null; i=$((i + 1))
+	done
+	echo "$f"
 }
 
 loop() {
-	f=$1; app=""
+	pre=${1%.pcm}
+	t0=$(date +%s)
+	pcm -A "${pre}_0.pcm"             # Stueck 0 (Warteschlange wurde vorher per STOP geleert)
+	n=1
 	while :; do
-		play $app -f pcm -r "$RATE" -l "$LOOPS" "$f" >/dev/null 2>&1   # erster Block ersetzt die Warteschlange
-		app="-A"
-		sleep $((SECS * LOOPS - 30))                                    # 30 s vor Ende naechsten Block anhaengen
+		pcm -A "${pre}_$((n % NCH)).pcm"   # Stueck n (startet bei t0 + n*CH)
+		target=$((t0 + n * CH)); now=$(date +%s)
+		[ "$target" -gt "$now" ] && sleep $((target - now))   # bis Stueck n laeuft -> 1 Stueck Vorrat
+		n=$((n + 1))
 	done
 }
 
 kill_loop() {
 	if running; then
 		p=$(cat "$PIDF")
-		pkill -P "$p" 2>/dev/null   # zuerst das wartende sleep, sonst haengt es an init
+		pkill -P "$p" 2>/dev/null     # zuerst das wartende sleep, sonst haengt es an init
 		kill "$p" 2>/dev/null
 	fi
 	rm -f "$PIDF"
 }
 
-start() {
-	kill_loop
-	f=$(prepare "$COLOR") || { f=$(prepare weiss) && COLOR=weiss; } || exit 1
-	spk_set "$VOL"
-	loop "$f" </dev/null >/dev/null 2>&1 &
-	echo $! > "$PIDF"
-	pub noise ON; pub noise_volume "$VOL"; pub noise_color "$COLOR"
-}
-
-# Warteschlange leeren: prudynt neu starten (laedt die gespeicherte Ansage-Lautstaerke aus /etc/prudynt.json)
-# und warten, bis es wieder laeuft (sonst geht ein direkt folgendes "start" ins Leere)
+# prudynt neu starten und warten, bis es wieder laeuft (sonst geht ein direkt folgendes "start" ins Leere)
 restart_prudynt() {
 	/etc/init.d/S31prudynt restart >/dev/null 2>&1
 	i=0
@@ -96,11 +100,35 @@ restart_prudynt() {
 	sleep 2
 }
 
+# laufendes Rauschen sicher beenden: sofort stumm, dann Warteschlange per prudynt-Neustart leeren
+quiet_flush() {
+	spk_set 0
+	restart_prudynt
+}
+
+start() {
+	if running; then
+		kill_loop; quiet_flush          # "Ersetzen" raeumt bei prudynt nicht zuverlaessig auf -> erst leeren
+	else
+		[ -f "$PREVF" ] || spk_get > "$PREVF"   # Ansage-Lautstaerke merken
+		echo STOP > /run/prudynt/audio_out
+	fi
+	f=$(prepare "$COLOR") || { f=$(prepare weiss) && COLOR=weiss; } || exit 1
+	spk_set "$VOL"
+	loop "$f" </dev/null >/dev/null 2>&1 &
+	echo $! > "$PIDF"
+	pub noise ON; pub noise_volume "$VOL"; pub noise_color "$COLOR"
+}
+
 stop() {
 	kill_loop
-	spk_set 0                                    # sofort still
+	if [ -f "$PREVF" ]; then
+		quiet_flush                       # laedt die gespeicherte Ansage-Lautstaerke
+		rm -f "$PREVF"
+	else
+		echo STOP > /run/prudynt/audio_out
+	fi
 	pub noise OFF
-	restart_prudynt
 }
 
 case "$1" in
@@ -117,10 +145,9 @@ case "$1" in
 	color)
 		case "$2" in weiss|rosa|braun) COLOR=$2 ;; *) echo "noise color weiss|rosa|braun" >&2; exit 1 ;; esac
 		save; pub noise_color "$COLOR"
-		# laufende Wiedergabe sauber ersetzen: stumm, Warteschlange leeren, neu starten
-		if running; then kill_loop; spk_set 0; restart_prudynt; start; fi ;;
+		running && start ;;
 	boot)
-		rm -f "$PIDF"; pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR" ;;
+		rm -f "$PIDF" "$PREVF"; pub noise OFF; pub noise_volume "$VOL"; pub noise_color "$COLOR" ;;
 	status)
 		running && s=an || s=aus; echo "$s, Lautstaerke $VOL, Farbe $COLOR, Lautsprecher jetzt $(spk_get)" ;;
 	*)

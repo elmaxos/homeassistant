@@ -1,0 +1,58 @@
+#!/bin/sh
+# Meldet die PTZ-Position (motors -p) und das passende Preset (/etc/ptz_presets.conf) per MQTT (retain):
+#   <hostname>/state/ptz_position  z. B. "1684,702"
+#   <hostname>/state/ptz_preset    z. B. "Preset 1" (oder Name aus der Datei) bzw. "frei"
+# Abfrage alle 3 s, Meldung bei Aenderung und zusaetzlich jede Minute.  ptz-state start|stop|once
+
+HOST=$(hostname)
+CONF=/etc/ptz_presets.conf
+PIDF=/run/ptz-state.pid
+TOL=10                            # Motorschritte Toleranz fuer "steht auf Preset"
+
+cfg() { jct /etc/thingino.json get "mqtt_sub.$1" 2>/dev/null | tr -d '"'; }
+pub() {
+	mosquitto_pub -h "$(cfg host)" -p "$(cfg port)" -u "$(cfg username)" -P "$(cfg password)" \
+		-r -t "$HOST/state/$1" -m "$2" >/dev/null 2>&1
+}
+
+preset_of() {
+	x=${1%,*}; y=${1#*,}
+	[ -f "$CONF" ] || { echo frei; return; }
+	while IFS='=,' read -r n name px py; do
+		case "$n" in ''|\#*) continue ;; esac
+		[ -n "$px" ] && [ -n "$py" ] || continue
+		dx=$((x - px)); dy=$((y - py))
+		if [ $((dx < 0 ? -dx : dx)) -le $TOL ] && [ $((dy < 0 ? -dy : dy)) -le $TOL ]; then
+			case "$name" in ''|Preset$n) echo "Preset $n" ;; *) echo "$name" ;; esac
+			return
+		fi
+	done < "$CONF"
+	echo frei
+}
+
+report() { pub ptz_position "$1"; pub ptz_preset "$(preset_of "$1")"; }
+
+loop() {
+	last=""; t=0
+	while :; do
+		p=$(motors -p 2>/dev/null)
+		case "$p" in
+			*[0-9],[0-9]*)
+				if [ "$p" != "$last" ] || [ $t -ge 20 ]; then report "$p"; last=$p; t=0; fi ;;
+		esac
+		t=$((t + 1)); sleep 3
+	done
+}
+
+case "$1" in
+	start)
+		[ -f "$PIDF" ] && kill "$(cat "$PIDF")" 2>/dev/null
+		loop </dev/null >/dev/null 2>&1 &
+		echo $! > "$PIDF" ;;
+	stop)
+		[ -f "$PIDF" ] && kill "$(cat "$PIDF")" 2>/dev/null; rm -f "$PIDF" ;;
+	once)
+		p=$(motors -p 2>/dev/null); echo "$p -> $(preset_of "$p")"; report "$p" ;;
+	*)
+		echo "Usage: ptz-state start|stop|once" >&2; exit 1 ;;
+esac

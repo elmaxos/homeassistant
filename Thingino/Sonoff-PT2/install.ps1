@@ -99,6 +99,18 @@ $content = [System.IO.File]::ReadAllText($DISCOVERY_SCRIPT)
 $content | & $SSH @SshOpts $Target "tr -d '\r' > /usr/sbin/thingino-ha-discovery.sh && chmod +x /usr/sbin/thingino-ha-discovery.sh && echo UPLOAD_OK"
 if ($LASTEXITCODE -ne 0) { Fail "upload failed" }
 
+# Zusatzskripte: Rauschen (noise/noise) und PTZ-Position/Preset (ptz-state)
+foreach ($extra in @(@{ Src = (Join-Path $SCRIPT_DIR "noise\noise"); Dst = "/usr/sbin/noise" },
+                     @{ Src = (Join-Path $SCRIPT_DIR "ptz-state");   Dst = "/usr/sbin/ptz-state" })) {
+    if (Test-Path $extra.Src) {
+        $c = [System.IO.File]::ReadAllText($extra.Src)
+        $c | & $SSH @SshOpts $Target "tr -d '\r' > $($extra.Dst) && chmod +x $($extra.Dst) && sh -n $($extra.Dst) && echo UPLOAD_OK"
+        if ($LASTEXITCODE -ne 0) { Fail "upload of $($extra.Dst) failed" }
+    } else {
+        Write-Host "  ($($extra.Src) not found, skipped)" -ForegroundColor Yellow
+    }
+}
+
 # ---------- Step 3: configure camera ----------
 Write-Step "[3/4] Configuring the camera"
 
@@ -178,6 +190,21 @@ case "$1" in
 esac
 EOF
 chmod +x /etc/init.d/S99ha-discovery
+
+if [ -x /usr/sbin/noise ]; then
+	echo "--- Rauschen: Autostart meldet nach dem Booten 'aus' an HA ---"
+	[ -f /etc/noise.conf ] || printf 'VOL=35\nCOLOR=braun\n' > /etc/noise.conf
+	printf '#!/bin/sh\ncase "$1" in\n\tstart) (sleep 20; /usr/sbin/noise boot) >/dev/null 2>&1 & ;;\nesac\n' > /etc/init.d/S99noise
+	chmod +x /etc/init.d/S99noise
+	/usr/sbin/noise boot
+	echo "Hinweis: Fuer aussetzerfreie Wiedergabe das Mikrofon ausschalten (HA-Schalter 'Mic'), wenn es nicht gebraucht wird."
+fi
+if [ -x /usr/sbin/ptz-state ] && command -v motors >/dev/null 2>&1; then
+	echo "--- PTZ-Position/Preset: Autostart + sofort starten ---"
+	printf '#!/bin/sh\ncase "$1" in\n\tstart) (sleep 25; /usr/sbin/ptz-state start) >/dev/null 2>&1 & ;;\nesac\n' > /etc/init.d/S99ptz-state
+	chmod +x /etc/init.d/S99ptz-state
+	/usr/sbin/ptz-state start
+fi
 
 echo "--- Running HA discovery ---"
 /usr/sbin/thingino-ha-discovery.sh || fail "discovery failed"
