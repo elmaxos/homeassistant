@@ -1,7 +1,8 @@
 - id: bilbut_sz_tuer
   alias: BILBUT_SZ_Tuer
-  description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben (Taste 1): einfach Bettlicht an (1 %)/aus, halten heller, doppelt Rauschen
-    lauter (+20). Unten (Taste 2): einfach Rauschen an/aus, halten dunkler (bis 1 %), doppelt Rauschen leiser (-20). Lautstaerke 20-100.'
+  description: 'Schlafzimmer-Tuer (BILRESA dual button, Matter). Oben: einfach Bettlicht an (1 %)/aus; halten heller (Licht aus: Baby wach); doppelt
+    Rauschen lauter (Rauschen aus: Kamera Preset 0). Unten: einfach Rauschen an/aus; halten dunkler bis 1 % (Licht aus: Baby schlaeft); doppelt
+    Rauschen leiser (Rauschen aus: Preset 1).'
   triggers:
   - trigger: state
     entity_id: event.schlafzimmer_bilbut_sz_tuer_taste_1
@@ -53,64 +54,92 @@
       - condition: template
         value_template: '{{ taste == ''oben'' and art == ''long_press'' }}'
       sequence:
-      - repeat:
-          while:
-          - condition: template
-            value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_1'', ''event_type'') == ''long_press'' }}'
-          sequence:
-          - variables:
-              pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'', ''on'')
-                else 0 }}'
-          - variables:
-              neu: '{{ [pct + 10, 100] | min }}'
-          - action: light.turn_on
-            target:
-              entity_id: light.sz_tra_bett
-            data:
-              brightness_pct: '{{ neu }}'
-              transition: 0.4
-          - delay:
-              milliseconds: 400
-          - if:
+      - if:
+        - condition: state
+          entity_id: light.sz_tra_bett
+          state: 'on'
+        then:
+        - repeat:
+            while:
             - condition: template
-              value_template: '{{ neu in [1, 100] }}'
-            then:
-            - stop: Grenze erreicht
+              value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_1'', ''event_type'') == ''long_press'' }}'
+            sequence:
+            - variables:
+                pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'',
+                  ''on'') else 0 }}'
+            - variables:
+                neu: '{{ [pct + 10, 100] | min }}'
+            - action: light.turn_on
+              target:
+                entity_id: light.sz_tra_bett
+              data:
+                brightness_pct: '{{ neu }}'
+                transition: 0.4
+            - delay:
+                milliseconds: 400
+            - if:
+              - condition: template
+                value_template: '{{ neu in [1, 100] }}'
+              then:
+              - stop: Grenze erreicht
+        else:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.baby_schlaeft
     - conditions:
       - condition: template
         value_template: '{{ taste == ''unten'' and art == ''long_press'' }}'
       sequence:
-      - repeat:
-          while:
-          - condition: template
-            value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_2'', ''event_type'') == ''long_press'' }}'
-          sequence:
-          - variables:
-              pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'', ''on'')
-                else 0 }}'
-          - variables:
-              neu: '{{ [pct - 10, 1] | max }}'
-          - action: light.turn_on
-            target:
-              entity_id: light.sz_tra_bett
-            data:
-              brightness_pct: '{{ neu }}'
-              transition: 0.4
-          - delay:
-              milliseconds: 400
-          - if:
+      - if:
+        - condition: state
+          entity_id: light.sz_tra_bett
+          state: 'on'
+        then:
+        - repeat:
+            while:
             - condition: template
-              value_template: '{{ neu in [1, 100] }}'
-            then:
-            - stop: Grenze erreicht
+              value_template: '{{ state_attr(''event.schlafzimmer_bilbut_sz_tuer_taste_2'', ''event_type'') == ''long_press'' }}'
+            sequence:
+            - variables:
+                pct: '{{ ((state_attr(''light.sz_tra_bett'', ''brightness'') or 0) / 2.55) | round(0) | int if is_state(''light.sz_tra_bett'',
+                  ''on'') else 0 }}'
+            - variables:
+                neu: '{{ [pct - 10, 1] | max }}'
+            - action: light.turn_on
+              target:
+                entity_id: light.sz_tra_bett
+              data:
+                brightness_pct: '{{ neu }}'
+                transition: 0.4
+            - delay:
+                milliseconds: 400
+            - if:
+              - condition: template
+                value_template: '{{ neu in [1, 100] }}'
+              then:
+              - stop: Grenze erreicht
+        else:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.baby_schlaeft
     - conditions:
       - condition: template
         value_template: '{{ art == ''multi_press_2'' }}'
       sequence:
-      - action: number.set_value
-        target:
-          entity_id: number.ing_sonoff_pt2_a574_noise_volume
-        data:
-          value: '{{ ([20, (states(''number.ing_sonoff_pt2_a574_noise_volume'') | int(40)) + (20 if taste == ''oben'' else -20), 100] | sort)[1]
-            }}'
+      - if:
+        - condition: state
+          entity_id: switch.ing_sonoff_pt2_a574_noise
+          state: 'on'
+        then:
+        - action: number.set_value
+          target:
+            entity_id: number.ing_sonoff_pt2_a574_noise_volume
+          data:
+            value: '{{ ([20, (states(''number.ing_sonoff_pt2_a574_noise_volume'') | int(40)) + (20 if taste == ''oben'' else -20), 100] | sort)[1]
+              }}'
+        else:
+        - action: button.press
+          target:
+            entity_id: '{{ ''button.ing_sonoff_pt2_a574_preset_0_load'' if taste == ''oben'' else ''button.ing_sonoff_pt2_a574_preset_1_load''
+              }}'
   mode: restart

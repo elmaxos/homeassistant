@@ -33,10 +33,14 @@ solange `event_type` der Taste `long_press` ist; `long_release` startet die Auto
 
 | Taste | einfach | doppelt | lang (halten) |
 |---|---|---|---|
-| oben (1) | Bettlicht an (immer 1 %, 1 s Übergang) / aus (`light.sz_tra_bett`) | Rauschen lauter (+20, max. 100) | heller, 10 % alle 0,4 s bis 100 % |
-| unten (2) | Rauschen an/aus (`switch.ing_sonoff_pt2_a574_noise`) | Rauschen leiser (−20, min. 20) | dunkler, 10 % alle 0,4 s bis 1 % (bleibt an) |
+| oben (1) | Bettlicht an (immer 1 %, 1 s Übergang) / aus (`light.sz_tra_bett`) | Rauschen an: lauter (+20, max. 100) · Rauschen aus: Kamera **Preset 0** (versteckt) | Licht an: heller bis 100 % · Licht aus: **Baby wach** |
+| unten (2) | Rauschen an/aus (`switch.ing_sonoff_pt2_a574_noise`) | Rauschen an: leiser (−20, min. 20) · Rauschen aus: Kamera **Preset 1** | Licht an: dunkler bis 1 % (bleibt an) · Licht aus: **Baby schläft** |
 
-Lautstärke: `number.ing_sonoff_pt2_a574_noise_volume`; wirkt sofort, wenn das Rauschen läuft, sonst beim nächsten Start.
+- Lautstärke: `number.ing_sonoff_pt2_a574_noise_volume`; wirkt sofort, wenn das Rauschen läuft.
+- Presets: `button.ing_sonoff_pt2_a574_preset_0_load` / `_preset_1_load`.
+- **Helfer `input_boolean.baby_schlaeft`** (UI-Helfer): soll als zusätzliche Bedingung in anderen Automationen dienen
+  (z. B. keine Ansagen/Licht, wenn das Baby schläft). Wird über die Fernbedienung gesetzt; automatisches Setzen nach
+  Zeit ist noch nicht eingerichtet.
 
 ## meine_heizung/externer_temperaturfuehler.yaml
 
