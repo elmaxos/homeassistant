@@ -255,6 +255,18 @@ st() {
 # prudynt JSON API (live) + persist to /etc/prudynt.json
 papi()  { printf '%s' "$1" | prudyntctl json - >/dev/null 2>&1; }
 psave() { papi '{"action":{"save_config":null}}'; }
+# kompletter prudynt-Neustart mit Zeitzone (sonst blendet prudynt UTC ein)
+prestart() { TZ=$(cat /etc/TZ 2>/dev/null) /etc/init.d/S31prudynt restart >/dev/null 2>&1; }
+# prudynt laeuft nicht (z. B. abgestuerzt) -> erst starten, sonst kommt kein Befehl mehr an
+pup() { pidof prudynt >/dev/null && return 0; prestart; i=0; while [ $i -lt 15 ] && ! papi '{"audio":{"spk_vol":null}}'; do sleep 1; i=$((i + 1)); done; }
+# Video/Ton eines Streams: speichern, dann voller Neustart. restart_thread 3 liess prudynt nach "Video aus" abstuerzen
+# (a574, 19.10.2026), danach kam auch "an" nicht mehr an.
+stream_flag() {
+	pup
+	papi "{\"$1\":{\"$2\":$3}}" && psave || jct /etc/prudynt.json set "$1.$2" "$3" >/dev/null
+	prestart
+	[ "$(pget "$1.$2")" = "$3" ] && st "${1}_$4" "$([ "$3" = true ] && echo ON || echo OFF)"
+}
 
 # CGI endpoints that need the API token
 IMAGING="http://localhost/x/json-imaging.cgi?token=$TOKEN"
@@ -382,10 +394,10 @@ case "$CMD" in
 	stream_set_str)
 		papi "{\"$2\":{\"$3\":\"$4\"},\"action\":{\"restart_thread\":3}}" && psave && st "${2}_${3}" "$4"
 		;;
-	stream_audio_on)  papi "{\"$VAL\":{\"audio_enabled\":true},\"action\":{\"restart_thread\":3}}"  && psave && st "${VAL}_audio" ON ;;
-	stream_audio_off) papi "{\"$VAL\":{\"audio_enabled\":false},\"action\":{\"restart_thread\":3}}" && psave && st "${VAL}_audio" OFF ;;
-	stream_video_on)  papi "{\"$VAL\":{\"video_enabled\":true},\"action\":{\"restart_thread\":3}}"  && psave && st "${VAL}_video" ON ;;
-	stream_video_off) papi "{\"$VAL\":{\"video_enabled\":false},\"action\":{\"restart_thread\":3}}" && psave && st "${VAL}_video" OFF ;;
+	stream_audio_on)  stream_flag "$VAL" audio_enabled true  audio ;;
+	stream_audio_off) stream_flag "$VAL" audio_enabled false audio ;;
+	stream_video_on)  stream_flag "$VAL" video_enabled true  video ;;
+	stream_video_off) stream_flag "$VAL" video_enabled false video ;;
 
 	# ---------- Day/Night & color ----------
 	daynight)
