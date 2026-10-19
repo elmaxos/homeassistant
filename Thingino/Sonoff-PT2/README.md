@@ -12,6 +12,8 @@ Based on [AsDinFlames/thingino-mqtt-ha-discovery](https://github.com/AsDinFlames
 |------|---------|
 | `install.ps1` | Windows installer. Uploads and configures everything over SSH. |
 | `thingino-ha-discovery.sh` | Runs on the camera: installs `/usr/sbin/thingino-cmd` and publishes the MQTT discovery payloads. Re-runs at every boot. |
+| `noise/noise`, `ptz-state` | Rauschen und PTZ-Position/Preset, lädt der Installer mit hoch (auf allen Kameras, auch ohne Nutzung). |
+| `ha_fix_suffix.py` | Läuft in HA: benennt nach einem Update Entitäten mit `_2` auf den alten Namen zurück (macht der Installer automatisch). |
 
 ## Requirements
 
@@ -68,6 +70,32 @@ camera in Home Assistant with the ONVIF integration. This is independent of the 
 
 4. In Home Assistant: Settings -> Devices & services -> MQTT -> the camera appears
    with the hostname as device name. Entity ids are `<hostname>_<control>`.
+
+## Kamera aktualisieren (gleicher Stand auf allen Kameras)
+
+Alle Kameras laufen mit denselben Dateien aus diesem Ordner. Nach Änderungen im Repo (oder für eine Kamera, die
+beim letzten Update offline war) pro Kamera:
+
+```powershell
+.\install.ps1 -CameraIp 192.168.0.72 -Update -NonInteractive
+```
+
+- `-Update` lässt die MQTT-Einstellungen der Kamera unverändert und liest Broker/Benutzer/Passwort aus der Kamera –
+  kein Passwort nötig. Ohne `-Update` (neue Kamera) fragt das Skript die Broker-Daten ab.
+- Lädt `thingino-ha-discovery.sh`, `noise/noise`, `ptz-state` hoch, richtet die Autostarts ein, Heartbeat 10 s,
+  Bewegungserkennung aus, startet prudynt (Bild ein paar Sekunden weg, kein Ton, kein Licht) und den MQTT-Empfänger
+  neu und veröffentlicht die Discovery.
+- Bricht ab, wenn gerade Rauschen läuft (erst in HA ausschalten).
+- Danach prüft es über den SSH-Alias `homeassistant` (Parameter `-HaHost`, `""` = aus), ob HA Entitäten mit `_2`
+  angelegt hat, und benennt sie zurück. Das passiert beim ersten Update einer Kamera mit altem Skript: dort haben
+  einige Schalter neue unique_ids (z. B. `light_white` statt `white_light`), und die neuen Entitäten entstehen,
+  bevor die alten Topics entfernt werden.
+- Dateien gehen per Base64 zur Kamera: Windows PowerShell 5.1 setzt beim Pipen sonst ein BOM vor die Skripte
+  (Shebang kaputt) und macht aus Umlauten „?“.
+- Wichtig: `S99ha-discovery` erzeugt `/usr/sbin/thingino-cmd` bei jedem Boot aus dem Discovery-Skript neu. Ein nur
+  direkt geändertes `thingino-cmd` ist nach dem nächsten Neustart weg – immer das Discovery-Skript ändern und verteilen.
+
+Stand 19.10.2026: 3684, a574, 26a4 aktualisiert (Discovery `6022256d`); 4420 war offline.
 
 ## Manual setup (what install.ps1 does, step by step)
 
@@ -221,6 +249,13 @@ played twice in a row without selecting another one in between.
 - Test a command without HA: `ssh root@<cam> /usr/sbin/thingino-cmd brightness 128`
 - Check the subscriber: `ssh root@<cam> "ps | grep mosquitto_sub"` (exactly one process)
 - Check the state-sync loop: `ssh root@<cam> "kill -0 \$(cat /run/ha-state.pid) && echo running"`
+- **Knöpfe in HA tun nichts:** die Kamera arbeitet MQTT-Befehle nacheinander ab, ein hängender Befehl blockiert alle
+  folgenden. Am 19.10.2026 hing ein `play` am Audio-FIFO, weil prudynt abgestürzt war. Prüfen:
+  Kinder des Dispatchers (`sh -c eval $MQTT_PAYLOAD`). Beheben, ohne die wartenden Klicks nachträglich auszuführen:
+  `mosquitto_sub` und `mqtt-sub-dispatcher` beenden, `/etc/init.d/S91mqttsub start`.
+  Seitdem: HA schickt Töne als `thingino-cmd play …`, das startet prudynt bei Bedarf und bricht nach 10 min ab.
+- **Video/Ton eines Streams umschalten:** `restart_thread 3` ließ prudynt nach „Video aus“ abstürzen. `thingino-cmd`
+  speichert den Wert jetzt und startet prudynt komplett neu (mit Zeitzone).
 
 ## Known limitations
 

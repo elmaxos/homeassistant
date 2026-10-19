@@ -1158,6 +1158,21 @@
       heading_style: subtitle
       icon: mdi:lightbulb-outline
     - type: tile
+      entity: switch.ing_sonoff_pt2_a574_white_light
+      name: Weißlicht
+      vertical: false
+      grid_options:
+        columns: 6
+      icon: mdi:light-flood-down
+      tap_action:
+        action: toggle
+        confirmation:
+          text: Weißlicht (Flutlicht) im Schlafzimmer umschalten?
+      icon_tap_action:
+        action: toggle
+        confirmation:
+          text: Weißlicht (Flutlicht) im Schlafzimmer umschalten?
+    - type: tile
       entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
       name: IR-Licht
       vertical: false

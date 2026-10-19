@@ -41,7 +41,7 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
   - **Zoom** + / − (digital, gedrückt halten) und Zoom zurücksetzen. Die Karte erlaubt in `cameras[].ptz.actions_zoom_*`
     nur `perform-action`, deshalb liegen die Zoom-Tasten als `elements` im Menü.
   - Für die **gerade gewählte** Kamera (`custom:advanced-camera-card-conditional` mit `condition: camera`):
-    Weißlicht (nicht beim Schlafzimmer, damit es nicht versehentlich angeht), IR-Licht, Privatsphäre, IR-Filter (`switch.<host>_ir_cut`, bei 4420 `_ir_cut_filter`),
+    Weißlicht (beim Schlafzimmer mit Rückfrage, damit es nicht versehentlich angeht), IR-Licht, Privatsphäre, IR-Filter (`switch.<host>_ir_cut`, bei 4420 `_ir_cut_filter`),
     Farbe/Schwarzweiß (`switch.<host>_color_mode`) und Status-LED (blau, `switch.<host>_status_led`; 4420 meldet keine).
   - Nur Schlafzimmer: **Rauschen** ein/aus (`switch.ing_sonoff_pt2_a574_noise`), Untermenü **Farbe**
     (`menu-submenu-select` auf `select.ing_sonoff_pt2_a574_noise_color`) und Untermenü **Lautstärke** (10–80 in 10er-Schritten,

@@ -422,7 +422,9 @@ case "$CMD" in
 	position_reset) motors -r >/dev/null 2>&1 ;;
 
 	# ---------- Sound ----------
-	play)      play "$VAL" >/dev/null 2>&1 ;;
+	# prudynt erst starten, falls er nicht laeuft: sonst blockiert play am FIFO fuer immer und mit ihm jeder weitere
+	# MQTT-Befehl (die Kamera arbeitet sie nacheinander ab). Hoechstens 10 min pro Ton.
+	play)      pup; timeout 600 play "$VAL" >/dev/null 2>&1 ;;
 	play_stop)
 		# laufendes Rauschen sauber beenden (stumm + prudynt-Neustart), sonst normaler Stopp
 		if [ -x /usr/sbin/noise ] && /usr/sbin/noise status 2>/dev/null | grep -q '^an'; then

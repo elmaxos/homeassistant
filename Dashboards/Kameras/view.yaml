@@ -343,6 +343,14 @@ sections:
         - schlafzimmer
       elements:
       - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_white_light
+        icon: mdi:light-flood-down
+        title: Weisslicht
+        tap_action:
+          action: toggle
+          confirmation:
+            text: Weißlicht (Flutlicht) im Schlafzimmer umschalten?
+      - type: custom:advanced-camera-card-menu-state-icon
         entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
         icon: mdi:led-outline
         title: IR-Licht

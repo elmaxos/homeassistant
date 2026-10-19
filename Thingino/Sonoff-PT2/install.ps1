@@ -5,6 +5,9 @@
 .DESCRIPTION
   Run from Windows PowerShell:   .\install.ps1
   or non-interactively:          .\install.ps1 -CameraIp 192.168.0.71
+  update an already set up camera to the scripts in this folder (no MQTT password needed,
+  the broker settings are taken from the camera):
+                                 .\install.ps1 -CameraIp 192.168.0.71 -Update -NonInteractive
 
   Steps performed:
     1. Copies your SSH public key to the camera (ssh-copy-id, optional)
@@ -12,6 +15,12 @@
     3. Configures on the camera: MQTT subscriber (<hostname>/cmd), motion -> MQTT,
        autostart of the discovery at boot, and runs the discovery once
     4. Verifies that the discovery payloads arrived at the broker
+  Also installs noise (Rauschen) and ptz-state, heartbeat 10 s, motion off by default.
+  The same script is used for new cameras and for updates, so all cameras run the same state.
+
+  After the camera setup, if the SSH alias -HaHost (default "homeassistant") works with a key, entities that HA
+  created with a "_2" suffix (new unique_ids after updating from an old discovery) are renamed back
+  (ha_fix_suffix.py, only if the old name is free).
 
   Requirements: Windows OpenSSH client (ssh.exe), thingino-ha-discovery.sh next to this file.
   The camera must run a Thingino firmware with the prudynt streamer (prudyntctl).
@@ -24,6 +33,8 @@ param(
     [string]$MqttUser   = "thingino",
     [string]$MqttPass   = "thingino",
     [switch]$SkipKeyCopy,
+    [switch]$Update,
+    [string]$HaHost     = "homeassistant",   # SSH-Alias des HA-Servers (SSH-Add-on) fuer die _2-Korrektur; "" = aus
     [switch]$NonInteractive
 )
 
@@ -33,6 +44,15 @@ if (-not (Test-Path $SSH)) { $SSH = "ssh" }
 
 function Write-Step($msg) { Write-Host ""; Write-Host "==> $msg" -ForegroundColor Green }
 function Fail($msg)       { Write-Host "ERROR: $msg" -ForegroundColor Red; exit 1 }
+
+# Dateien als Base64 uebertragen: Windows PowerShell 5.1 setzt beim Pipen in ssh.exe sonst ein BOM davor
+# (Shebang kaputt) und macht aus Umlauten "?". Auf der Kamera: nur Base64-Zeichen behalten, dekodieren, CR entfernen.
+$OutputEncoding = New-Object System.Text.ASCIIEncoding
+function Send-Text([string]$text, [string]$remoteCmd, [string]$dest = $Target) {
+    $b64 = [Convert]::ToBase64String((New-Object System.Text.UTF8Encoding $false).GetBytes($text))
+    $b64 | & $SSH @SshOpts $dest "tr -cd 'A-Za-z0-9+/=' | base64 -d | tr -d '\r' $remoteCmd"
+}
+function Read-Utf8([string]$file) { [System.IO.File]::ReadAllText($file, (New-Object System.Text.UTF8Encoding $false)) }
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host " Thingino -> Home Assistant camera setup"   -ForegroundColor Cyan
@@ -48,6 +68,8 @@ if (-not $CameraIp) { Fail "no camera IP given" }
 
 if (-not $NonInteractive) {
     $in = Read-Host "Camera SSH user [$CameraUser]";   if ($in) { $CameraUser = $in }
+}
+if (-not $NonInteractive -and -not $Update) {
     $in = Read-Host "MQTT broker IP [$Broker]";        if ($in) { $Broker = $in }
     $in = Read-Host "MQTT port [$Port]";               if ($in) { $Port = $in }
     $in = Read-Host "MQTT username [$MqttUser]";       if ($in) { $MqttUser = $in }
@@ -60,7 +82,8 @@ foreach ($v in @($Broker, $MqttUser, $MqttPass)) {
 
 Write-Host ""
 Write-Host "  Camera : ${CameraUser}@${CameraIp}"
-Write-Host "  Broker : ${Broker}:${Port} (user $MqttUser)"
+if ($Update) { Write-Host "  Mode   : update (MQTT settings stay as configured on the camera)" }
+else         { Write-Host "  Broker : ${Broker}:${Port} (user $MqttUser)" }
 if (-not $NonInteractive) {
     $c = Read-Host "Apply? [y/N]"
     if ($c -notin @("y", "Y")) { Write-Host "Aborted."; exit 1 }
@@ -94,17 +117,14 @@ if (Test-KeyLogin) {
 
 # ---------- Step 2: upload discovery script ----------
 Write-Step "[2/4] Uploading thingino-ha-discovery.sh"
-# 'tr -d' strips any CR that PowerShell adds when piping to a native command.
-$content = [System.IO.File]::ReadAllText($DISCOVERY_SCRIPT)
-$content | & $SSH @SshOpts $Target "tr -d '\r' > /usr/sbin/thingino-ha-discovery.sh && chmod +x /usr/sbin/thingino-ha-discovery.sh && echo UPLOAD_OK"
+Send-Text (Read-Utf8 $DISCOVERY_SCRIPT) "> /usr/sbin/thingino-ha-discovery.sh && chmod +x /usr/sbin/thingino-ha-discovery.sh && sh -n /usr/sbin/thingino-ha-discovery.sh && echo UPLOAD_OK"
 if ($LASTEXITCODE -ne 0) { Fail "upload failed" }
 
 # Zusatzskripte: Rauschen (noise/noise) und PTZ-Position/Preset (ptz-state)
 foreach ($extra in @(@{ Src = (Join-Path $SCRIPT_DIR "noise\noise"); Dst = "/usr/sbin/noise" },
                      @{ Src = (Join-Path $SCRIPT_DIR "ptz-state");   Dst = "/usr/sbin/ptz-state" })) {
     if (Test-Path $extra.Src) {
-        $c = [System.IO.File]::ReadAllText($extra.Src)
-        $c | & $SSH @SshOpts $Target "tr -d '\r' > $($extra.Dst) && chmod +x $($extra.Dst) && sh -n $($extra.Dst) && echo UPLOAD_OK"
+        Send-Text (Read-Utf8 $extra.Src) "> $($extra.Dst) && chmod +x $($extra.Dst) && sh -n $($extra.Dst) && echo UPLOAD_OK"
         if ($LASTEXITCODE -ne 0) { Fail "upload of $($extra.Dst) failed" }
     } else {
         Write-Host "  ($($extra.Src) not found, skipped)" -ForegroundColor Yellow
@@ -128,11 +148,10 @@ api() {
 command -v prudyntctl >/dev/null 2>&1 || fail "prudyntctl not found - this firmware does not use the prudynt streamer"
 command -v mosquitto_pub >/dev/null 2>&1 || fail "mosquitto_pub not found on the camera"
 [ -n "$TOKEN" ] || fail "/etc/thingino-api.key missing"
-
-echo "--- MQTT subscriber (commands from HA on $HOST/cmd) ---"
-api json-config-mqtt-sub.cgi '{"enabled":true,"host":"__BROKER__","port":__PORT__,"username":"__USER__","password":"__PASS__","use_ssl":false,"subscriptions":[{"topic":"%hostname/cmd","qos":0,"action":"eval $MQTT_PAYLOAD","enabled":true}]}' >/dev/null \
-	|| fail "json-config-mqtt-sub.cgi failed"
-[ "$(jct /etc/thingino.json get mqtt_sub.host | tr -d '"')" = "__BROKER__" ] || fail "mqtt_sub config was not saved"
+# laufendes Rauschen verstellt spk_vol live; save_config/Neustart unten wuerden das speichern bzw. abbrechen
+if [ -x /usr/sbin/noise ] && /usr/sbin/noise status 2>/dev/null | grep -q '^an'; then
+	fail "Rauschen laeuft gerade - erst in HA ausschalten, dann nochmal starten"
+fi
 
 echo "--- Disable logo OSD (persist prudynt's current config first) ---"
 # save_config dumps prudynt's in-memory config to /etc/prudynt.json, so this
@@ -140,9 +159,24 @@ echo "--- Disable logo OSD (persist prudynt's current config first) ---"
 printf '{"stream0":{"osd":{"logo":{"enabled":false}}},"stream1":{"osd":{"logo":{"enabled":false}}},"action":{"save_config":null}}' | prudyntctl json - >/dev/null 2>&1
 sleep 1
 
+if [ "__UPDATE__" = 1 ]; then
+	# Update: Broker-Zugang aus der Kamera-Konfiguration, MQTT-Einstellungen bleiben unveraendert
+	BROKER=$(jct /etc/thingino.json get mqtt_sub.host 2>/dev/null | tr -d '"'); PORT=$(jct /etc/thingino.json get mqtt_sub.port 2>/dev/null | tr -d '"')
+	MUSER=$(jct /etc/thingino.json get mqtt_sub.username 2>/dev/null | tr -d '"'); MPASS=$(jct /etc/thingino.json get mqtt_sub.password 2>/dev/null | tr -d '"')
+	[ -n "$BROKER" ] || fail "update: no MQTT subscriber configured on this camera - run install.ps1 without -Update"
+	PORT=${PORT:-1883}
+	echo "--- Update: MQTT settings kept ($BROKER:$PORT) ---"
+else
+BROKER="__BROKER__"; PORT="__PORT__"; MUSER="__USER__"; MPASS="__PASS__"
+echo "--- MQTT subscriber (commands from HA on $HOST/cmd) ---"
+api json-config-mqtt-sub.cgi '{"enabled":true,"host":"__BROKER__","port":__PORT__,"username":"__USER__","password":"__PASS__","use_ssl":false,"subscriptions":[{"topic":"%hostname/cmd","qos":0,"action":"eval $MQTT_PAYLOAD","enabled":true}]}' >/dev/null \
+	|| fail "json-config-mqtt-sub.cgi failed"
+[ "$(jct /etc/thingino.json get mqtt_sub.host | tr -d '"')" = "__BROKER__" ] || fail "mqtt_sub config was not saved"
+
 echo "--- Motion events -> MQTT ($HOST/motion) ---"
 api json-config-send2.cgi '{"config":{"mqtt":{"enabled":true,"host":"__BROKER__","port":__PORT__,"username":"__USER__","password":"__PASS__","use_ssl":false,"client_id":"'"$HOST"'","topic":"'"$HOST"'/motion","message":"{\"timestamp\": \"%s\"}","send_photo":false,"topic_photo":""}}}' >/dev/null \
 	|| fail "json-config-send2.cgi (mqtt) failed"
+fi
 
 # Motion detection is written to /etc/prudynt.json and applied by restarting
 # prudynt. Enabling it live on a fresh camera crashes prudynt (detection frame
@@ -210,7 +244,7 @@ echo "--- Running HA discovery ---"
 /usr/sbin/thingino-ha-discovery.sh || fail "discovery failed"
 
 echo "--- Verifying retained discovery config at the broker ---"
-if mosquitto_sub -h "__BROKER__" -p __PORT__ -u "__USER__" -P "__PASS__" -t "homeassistant/switch/${HOST}_privacy/config" -C 1 -W 5 >/dev/null 2>&1; then
+if mosquitto_sub -h "$BROKER" -p "$PORT" -u "$MUSER" -P "$MPASS" -t "homeassistant/switch/${HOST}_privacy/config" -C 1 -W 5 >/dev/null 2>&1; then
 	echo "OK: discovery payloads are stored at the broker"
 else
 	fail "discovery payload not found at the broker"
@@ -218,11 +252,26 @@ fi
 echo "SETUP_OK"
 '@
 
+$SETUP = $SETUP.Replace("__UPDATE__", $(if ($Update) { "1" } else { "0" }))
 $SETUP = $SETUP.Replace("__BROKER__", $Broker).Replace("__PORT__", $Port).Replace("__USER__", $MqttUser).Replace("__PASS__", $MqttPass)
-$SETUP | & $SSH @SshOpts $Target "tr -d '\r' > /tmp/thingino-setup.sh && sh /tmp/thingino-setup.sh"
+Send-Text $SETUP "> /tmp/thingino-setup.sh && sh /tmp/thingino-setup.sh"
 if ($LASTEXITCODE -ne 0) { Fail "camera setup failed (see output above)" }
 
-# ---------- Step 4: summary ----------
+# ---------- Step 4: HA-Seite: Entitaeten mit _2 zuruecksetzen ----------
+$FIX = Join-Path $SCRIPT_DIR "ha_fix_suffix.py"
+if ($HaHost -and (Test-Path $FIX)) {
+    $haOk = & $SSH -o BatchMode=yes -o ConnectTimeout=8 $HaHost "echo HA_OK" 2>$null
+    if ($haOk -match "HA_OK") {
+        Write-Step "Home Assistant: checking for entities with _2 suffix"
+        $camHost = (& $SSH @SshOpts $Target "hostname" 2>$null | Select-Object -First 1).Trim()
+        Start-Sleep -Seconds 5   # HA die neuen Discovery-Topics verarbeiten lassen
+        Send-Text (Read-Utf8 $FIX) "| sudo tee /config/.ha_fix_suffix.py >/dev/null && T=`$(sudo cat /run/s6/container_environment/SUPERVISOR_TOKEN) && sudo docker exec -e T=`$T homeassistant python3 /config/.ha_fix_suffix.py $camHost apply" $HaHost
+    } else {
+        Write-Host "HA SSH alias '$HaHost' not reachable - skipped _2 check (run ha_fix_suffix.py in HA if entities end with _2)." -ForegroundColor Yellow
+    }
+}
+
+# ---------- Step 5: summary ----------
 Write-Step "[4/4] Done"
 Write-Host "The camera should now appear in Home Assistant under Settings -> Devices (MQTT)." -ForegroundColor Cyan
 Write-Host "Log of the boot-time discovery on the camera: /tmp/ha-discovery.log"

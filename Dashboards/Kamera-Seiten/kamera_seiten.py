@@ -15,7 +15,7 @@ CAMS = [
     {"key": "schlafzimmer", "title": "Schlafzimmer", "icon": "mdi:bed", "h": "ing_sonoff_pt2_a574",
      "cam": "camera.sonoff_pt2_3_profile_0", "sub": "camera.sonoff_kamera_3_profile_1", "invert": True,
      "presets": [(1, "Ansicht", "mdi:eye-outline"), (0, "Privat", "mdi:incognito")], "preset_sensor": True,
-     "no_white": True, "noise": True},
+     "white_confirm": True, "noise": True},   # Flutlicht nur mit Rueckfrage
     {"key": "unterstand", "title": "Unterstand", "icon": "mdi:home-roof", "h": "ing_sonoff_pt2_26a4",
      "cam": "camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1", "invert": True,   # HD-Video an der Kamera aus
      "presets": [(1, "Preset 1", "mdi:numeric-1-box-outline"), (0, "Preset 0", "mdi:numeric-0-box-outline")]},
@@ -111,8 +111,8 @@ def camera_view(c):
                           tap=press(b + "position_reset")))
 
     licht = [{"type": "heading", "heading": "Licht & Bild", "heading_style": "subtitle", "icon": "mdi:lightbulb-outline"}]
-    if not c.get("no_white"):
-        licht.append(tile(s + "white_light", "Weißlicht", "mdi:light-flood-down"))
+    licht.append(tile(s + "white_light", "Weißlicht", "mdi:light-flood-down",
+                      tap={"action": "toggle", "confirmation": {"text": "Weißlicht (Flutlicht) im Schlafzimmer umschalten?"}} if c.get("white_confirm") else None))
     licht += [tile(s + "ir_light_850nm", "IR-Licht", "mdi:led-outline"),
               tile(s + c.get("ircut", "ir_cut"), "IR-Filter", "mdi:camera-iris"),
               tile(s + "color_mode", "Farbbild", "mdi:invert-colors")]

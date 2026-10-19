@@ -177,7 +177,7 @@ tts_cam_ausgabe:
         - action: mqtt.publish
           data:
             topic: '{{ geraete[repeat.item].topic }}'
-            payload: play {{ datei }}
+            payload: thingino-cmd play {{ datei }}
     - delay:
         seconds: '{{ effektive_pause }}'
   - if:
@@ -211,7 +211,7 @@ tts_cam_ausgabe:
         - action: mqtt.publish
           data:
             topic: '{{ geraete[repeat.item].topic }}'
-            payload: play 'http://192.168.0.48:8123{{ tts_result.content.path }}'
+            payload: thingino-cmd play 'http://192.168.0.48:8123{{ tts_result.content.path }}'
     - delay:
         seconds: '{{ (text | length / 13) | round(0) + 2 }}'
   - if:

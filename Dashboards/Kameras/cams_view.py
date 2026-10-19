@@ -13,7 +13,7 @@ CAMS = [
      "presets": [("Preset 1", 1), ("Preset 2", 2), ("Preset 0", 0)]},
     {"id": "schlafzimmer", "host": "ing_sonoff_pt2_a574", "title": "Schlafzimmer", "icon": "mdi:bed",
      "entity": "camera.sonoff_pt2_3_profile_0", "sub": "camera.sonoff_kamera_3_profile_1", "invert": True,
-     "noise": True, "no_white_light": True,   # Flutlicht im Schlafzimmer nicht versehentlich einschalten
+     "noise": True, "white_confirm": True,   # Flutlicht im Schlafzimmer nur mit Rueckfrage
      "presets": [("Ansicht 1", 1), ("Privat", 0)]},
     {"id": "unterstand", "host": "ing_sonoff_pt2_26a4", "title": "Unterstand", "icon": "mdi:home-roof",
      # Hauptstream-Video ist an dieser Kamera aus -> Substream (profile_1)
@@ -78,9 +78,12 @@ def noise_menu(h):
     ]
 
 
-def state_icon(entity, icon, title):
+def state_icon(entity, icon, title, confirm=None):
+    tap = {"action": "toggle"}
+    if confirm:
+        tap["confirmation"] = {"text": confirm}
     return {"type": "custom:advanced-camera-card-menu-state-icon", "entity": entity, "icon": icon,
-            "title": title, "tap_action": {"action": "toggle"}}
+            "title": title, "tap_action": tap}
 
 
 ELEMENTS = [
@@ -99,9 +102,10 @@ for c in CAMS:
     ELEMENTS.append({
         "type": "custom:advanced-camera-card-conditional",
         "conditions": [{"condition": "camera", "cameras": [c["id"]]}],
-        "elements": ([] if c.get("no_white_light") else [
-            state_icon("switch.%s_white_light" % h, "mdi:light-flood-down", "Weisslicht"),
-        ]) + [
+        "elements": [
+            state_icon("switch.%s_white_light" % h, "mdi:light-flood-down", "Weisslicht",
+                       "Weißlicht (Flutlicht) im Schlafzimmer umschalten?" if c.get("white_confirm") else None),
+        ] + [
             state_icon("switch.%s_ir_light_850nm" % h, "mdi:led-outline", "IR-Licht"),
             state_icon("switch.%s_privacy" % h, "mdi:eye-off", "Privatsphaere"),
             state_icon(c.get("ircut", "switch.%s_ir_cut" % h), "mdi:camera-iris", "IR-Filter"),

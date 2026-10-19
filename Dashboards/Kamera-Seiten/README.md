@@ -18,7 +18,7 @@ die Schwenk-Steuerung rechts daneben, darunter drei Spalten. Am Handy steht alle
   langsam/fein (`button.<host>_ptz_*`). Bei Schlafzimmer/Unterstand vertauscht verdrahtet, siehe `../Kameras/README.md`.
 - **Position:** gespeicherte Presets + „Mitte“ (`position_reset`), in der Überschrift das erkannte Preset
   (`sensor.<host>_ptz_preset`, wo vorhanden).
-- **Licht & Bild:** Weißlicht (nicht beim Schlafzimmer), IR-Licht, IR-Filter, Farbbild/Schwarzweiß, Status-LED (nicht 4420),
+- **Licht & Bild:** Weißlicht (Schlafzimmer mit Rückfrage), IR-Licht, IR-Filter, Farbbild/Schwarzweiß, Status-LED (nicht 4420),
   Privat-Modus.
 - **Ton:** Lautstärke-Regler `number.<host>_speaker_volume` (gespeicherte Lautstärke für Ansagen/TTS).
   Nur Schlafzimmer: Rauschen hat einen eigenen Regler; solange es läuft, setzt es `spk_vol` selbst, nach dem Stopp gilt
