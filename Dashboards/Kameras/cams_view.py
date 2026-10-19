@@ -113,6 +113,8 @@ for c in CAMS:
         ],
     })
 
+OFF = {"enabled": False}
+
 CARD = {
     "type": "custom:advanced-camera-card",
     "cameras": [camera(c) for c in CAMS] + [sub_camera(c) for c in CAMS if c.get("sub")],
@@ -121,16 +123,24 @@ CARD = {
         "zoomable": True,
         "draggable": False,
         "preload": False,
-        # nur die sichtbare Kamera streamt
-        "lazy_unload": ["unselected", "hidden"],
-        "display": {"mode": "single"},
+        # Stream stoppt, wenn die Seite nicht sichtbar ist ("unselected" wuerde im Raster alle bis auf eine entladen)
+        "lazy_unload": ["hidden"],
+        "display": {"mode": "single", "grid_columns": 2, "grid_selected_width_factor": 1},   # Raster 2x2
         # Bedienelemente aufgeraeumt: PTZ standardmaessig aus (Knopf im Menue); Wechsel-Pfeile links/rechts im Bild
         "controls": {"ptz": {"mode": "off", "position": "bottom-right", "orientation": "horizontal"},
-                     "next_previous": {"style": "chevrons"}},
+                     "next_previous": {"style": "chevrons"}, "thumbnails": {"mode": "none"}},
     },
-    # Menue nur bei Maus ueber dem Bild bzw. nach Antippen
-    "menu": {"style": "hover", "position": "top", "alignment": "right",
-             "buttons": {"ptz_controls": {"enabled": True}}},
+    # Menue als Leiste UEBER dem Bild: verdeckt nichts, kein versehentliches Antippen beim Einblenden
+    "menu": {"style": "outside", "position": "top", "alignment": "right",
+             "buttons": {"iris": OFF, "live": OFF, "clips": OFF, "snapshots": OFF, "recordings": OFF, "image": OFF,
+                         "timeline": OFF, "media_player": OFF, "expand": OFF, "microphone": OFF, "ptz_home": OFF,
+                         "download": OFF, "camera_ui": OFF, "screenshot": OFF, "play": OFF, "mute": OFF,
+                         "cameras": {"enabled": True, "priority": 90},
+                         "display_mode": {"enabled": True, "priority": 85},
+                         "substreams": {"enabled": True, "priority": 80, "icon": "mdi:high-definition-box"},
+                         "ptz_controls": {"enabled": True, "priority": 75},
+                         "fullscreen": {"enabled": True, "priority": 70}}},
+    "status_bar": {"style": "none"},
     "elements": ELEMENTS,
     "dimensions": {"aspect_ratio": "16:9"},
     "grid_options": {"columns": "full"},

@@ -187,19 +187,75 @@ sections:
       draggable: false
       preload: false
       lazy_unload:
-      - unselected
       - hidden
       display:
         mode: single
+        grid_columns: 2
+        grid_selected_width_factor: 1
       controls:
         ptz:
-          mode: 'on'
+          mode: 'off'
           position: bottom-right
           orientation: horizontal
+        next_previous:
+          style: chevrons
+        thumbnails:
+          mode: none
     menu:
-      style: overlay
+      style: outside
       position: top
       alignment: right
+      buttons:
+        iris:
+          enabled: false
+        live:
+          enabled: false
+        clips:
+          enabled: false
+        snapshots:
+          enabled: false
+        recordings:
+          enabled: false
+        image:
+          enabled: false
+        timeline:
+          enabled: false
+        media_player:
+          enabled: false
+        expand:
+          enabled: false
+        microphone:
+          enabled: false
+        ptz_home:
+          enabled: false
+        download:
+          enabled: false
+        camera_ui:
+          enabled: false
+        screenshot:
+          enabled: false
+        play:
+          enabled: false
+        mute:
+          enabled: false
+        cameras:
+          enabled: true
+          priority: 90
+        display_mode:
+          enabled: true
+          priority: 85
+        substreams:
+          enabled: true
+          priority: 80
+          icon: mdi:high-definition-box
+        ptz_controls:
+          enabled: true
+          priority: 75
+        fullscreen:
+          enabled: true
+          priority: 70
+    status_bar:
+      style: none
     elements:
     - type: custom:advanced-camera-card-menu-icon
       icon: mdi:magnify-plus-outline
@@ -262,18 +318,30 @@ sections:
         title: Privatsphaere
         tap_action:
           action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_ir_cut
+        icon: mdi:camera-iris
+        title: IR-Filter
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_color_mode
+        icon: mdi:invert-colors
+        title: Farbe / Schwarzweiss
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_3684_status_led
+        icon: mdi:led-on
+        title: Status-LED (blau)
+        tap_action:
+          action: toggle
     - type: custom:advanced-camera-card-conditional
       conditions:
       - condition: camera
         cameras:
         - schlafzimmer
       elements:
-      - type: custom:advanced-camera-card-menu-state-icon
-        entity: switch.ing_sonoff_pt2_a574_white_light
-        icon: mdi:light-flood-down
-        title: Weisslicht
-        tap_action:
-          action: toggle
       - type: custom:advanced-camera-card-menu-state-icon
         entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
         icon: mdi:led-outline
@@ -284,6 +352,110 @@ sections:
         entity: switch.ing_sonoff_pt2_a574_privacy
         icon: mdi:eye-off
         title: Privatsphaere
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_ir_cut
+        icon: mdi:camera-iris
+        title: IR-Filter
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_color_mode
+        icon: mdi:invert-colors
+        title: Farbe / Schwarzweiss
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_noise
+        icon: mdi:waveform
+        title: Rauschen
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-submenu-select
+        entity: select.ing_sonoff_pt2_a574_noise_color
+        icon: mdi:palette
+        title: Rauschen Farbe
+      - type: custom:advanced-camera-card-menu-submenu
+        icon: mdi:volume-medium
+        title: Rauschen Lautstaerke
+        items:
+        - title: Lautstaerke 10
+          icon: mdi:volume-low
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 10
+        - title: Lautstaerke 20
+          icon: mdi:volume-low
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 20
+        - title: Lautstaerke 30
+          icon: mdi:volume-low
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 30
+        - title: Lautstaerke 40
+          icon: mdi:volume-medium
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 40
+        - title: Lautstaerke 50
+          icon: mdi:volume-medium
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 50
+        - title: Lautstaerke 60
+          icon: mdi:volume-medium
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 60
+        - title: Lautstaerke 70
+          icon: mdi:volume-high
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 70
+        - title: Lautstaerke 80
+          icon: mdi:volume-high
+          tap_action:
+            action: perform-action
+            perform_action: number.set_value
+            target:
+              entity_id: number.ing_sonoff_pt2_a574_noise_volume
+            data:
+              value: 80
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_a574_status_led
+        icon: mdi:led-on
+        title: Status-LED (blau)
         tap_action:
           action: toggle
     - type: custom:advanced-camera-card-conditional
@@ -310,6 +482,24 @@ sections:
         title: Privatsphaere
         tap_action:
           action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_ir_cut
+        icon: mdi:camera-iris
+        title: IR-Filter
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_color_mode
+        icon: mdi:invert-colors
+        title: Farbe / Schwarzweiss
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_26a4_status_led
+        icon: mdi:led-on
+        title: Status-LED (blau)
+        tap_action:
+          action: toggle
     - type: custom:advanced-camera-card-conditional
       conditions:
       - condition: camera
@@ -332,6 +522,18 @@ sections:
         entity: switch.ing_sonoff_pt2_4420_privacy
         icon: mdi:eye-off
         title: Privatsphaere
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_4420_ir_cut_filter
+        icon: mdi:camera-iris
+        title: IR-Filter
+        tap_action:
+          action: toggle
+      - type: custom:advanced-camera-card-menu-state-icon
+        entity: switch.ing_sonoff_pt2_4420_color_mode
+        icon: mdi:invert-colors
+        title: Farbe / Schwarzweiss
         tap_action:
           action: toggle
     dimensions:

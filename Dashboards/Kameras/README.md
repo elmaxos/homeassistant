@@ -30,11 +30,14 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
 ## Bedienung
 
 - **Kamera wechseln** mit den Pfeilen links/rechts im Bild (`next_previous: chevrons`) oder über das Kamera-Symbol im Menü.
-- Das **Menü oben rechts** erscheint, sobald die Maus über dem Bild ist (am Handy nach Antippen, `menu.style: hover`). Darin:
+- Das **Menü** steht als Leiste **über** dem Bild (`menu.style: outside`): es verdeckt nichts und kann nicht beim Einblenden
+  versehentlich gedrückt werden (vorher `hover`-Overlay). Keine Statuszeile im Bild. Darin:
+  - **Kamera wählen** und **Raster** (`display_mode`): alle Kameras 2×2 gleichzeitig (`live.display.grid_columns: 2`,
+    `grid_selected_width_factor: 1`), nochmal tippen = wieder eine Kamera.
+  - **HD/LD** (Substream) bei Wohnzimmer und Schlafzimmer.
   - **Schwenk-Steuerung ein/aus** (`menu.buttons.ptz_controls`, standardmäßig aus: `live.controls.ptz.mode: off`).
     Eingeblendet unten rechts: Pfeile drücken die MQTT-Buttons `ptz_*_fast`, gedrückt halten wiederholt alle 0,4 s;
     Home-Taste = erstes Preset, daneben die Preset-Liste.
-  - **Substream** (kleiner Stream) bei Wohnzimmer und Schlafzimmer.
   - **Zoom** + / − (digital, gedrückt halten) und Zoom zurücksetzen. Die Karte erlaubt in `cameras[].ptz.actions_zoom_*`
     nur `perform-action`, deshalb liegen die Zoom-Tasten als `elements` im Menü.
   - Für die **gerade gewählte** Kamera (`custom:advanced-camera-card-conditional` mit `condition: camera`):
@@ -44,7 +47,8 @@ Das Menü zeigt dann ein Substream-Symbol zum Umschalten.
     (`menu-submenu-select` auf `select.ing_sonoff_pt2_a574_noise_color`) und Untermenü **Lautstärke** (10–80 in 10er-Schritten,
     `number.set_value` auf `number.ing_sonoff_pt2_a574_noise_volume`). Siehe `Thingino/Sonoff-PT2/noise/`.
 - **Zoom per Geste:** Zwei-Finger-Pinch am Handy, am PC Strg + Mausrad, danach verschieben.
-- Nur die sichtbare Kamera streamt (`live.lazy_unload: [unselected, hidden]`).
+- Streams stoppen, wenn die Seite nicht sichtbar ist (`live.lazy_unload: [hidden]`). Früher stand dort zusätzlich
+  `unselected`; das entlädt alle nicht gewählten Kameras, deshalb blieb das Raster schwarz.
 
 ## Einspielen
 
