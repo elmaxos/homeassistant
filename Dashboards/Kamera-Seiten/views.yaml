@@ -1,0 +1,1383 @@
+- type: sections
+  max_columns: 2
+  title: Kamera
+  path: kamera
+  icon: mdi:webcam
+  sections:
+  - type: grid
+    column_span: 2
+    cards:
+    - type: heading
+      heading: Kameras
+      icon: mdi:cctv
+      heading_style: title
+    - type: picture-entity
+      entity: camera.sonoff_pt2_1_profile_0
+      name: Wohnzimmer
+      camera_view: auto
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      hold_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      grid_options:
+        columns: 6
+    - type: picture-entity
+      entity: camera.sonoff_pt2_3_profile_0
+      name: Schlafzimmer
+      camera_view: auto
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      hold_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      grid_options:
+        columns: 6
+    - type: picture-entity
+      entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1
+      name: Unterstand
+      camera_view: auto
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      hold_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      grid_options:
+        columns: 6
+    - type: picture-entity
+      entity: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2
+      name: Kamera 4420
+      camera_view: auto
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      hold_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      grid_options:
+        columns: 6
+  - type: grid
+    cards:
+    - type: heading
+      heading: TAPO
+      heading_style: title
+    - camera_view: live
+      fit_mode: cover
+      type: picture-glance
+      image:
+        media_content_id: https://demo.home-assistant.io/stub_config/kitchen.png
+      entities: []
+      camera_image: camera.tapo_c210_e5f0_sd_stream
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.tapo_c210_e5f0_move_left
+        data: {}
+      icon: mdi:arrow-left-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.tapo_c210_e5f0_move_up
+        data: {}
+      icon: mdi:arrow-up-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.tapo_c210_e5f0_move_down
+        data: {}
+      icon: mdi:arrow-down-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.tapo_c210_e5f0_move_right
+        data: {}
+      icon: mdi:arrow-right-bold
+    - type: tile
+      entity: select.tapo_c210_e5f0_night_vision_switching
+      name: Nachtsicht
+      hide_state: true
+      vertical: false
+      features:
+      - type: select-options
+      features_position: bottom
+      grid_options:
+        columns: 6
+        rows: 2
+    - type: tile
+      entity: select.tapo_c210_e5f0_move_to_preset
+      name: Presets
+      hide_state: true
+      vertical: false
+      features:
+      - type: select-options
+      features_position: bottom
+      grid_options:
+        columns: 6
+        rows: 2
+    - type: entities
+      entities:
+      - entity: number.tapo_c210_e5f0_movement_angle
+        name: 'Winkel '
+        secondary_info: none
+      grid_options:
+        columns: 12
+        rows: 1
+      visibility:
+      - condition: user
+        users:
+        - 10695b18e2cd46eeb52a1393a6db88c9
+  - type: grid
+    cards:
+    - show_name: true
+      show_icon: false
+      type: button
+      icon: mdi:cctv
+      tap_action:
+        action: perform-action
+        target:
+          entity_id: select.tapo_c210_e5f0_move_to_preset
+        data:
+          option: Teppich
+        perform_action: select.select_option
+      name: Tepich
+      grid_options:
+        columns: 3
+        rows: 1
+    - show_name: true
+      show_icon: false
+      type: button
+      icon: mdi:cctv
+      tap_action:
+        action: perform-action
+        target:
+          entity_id: select.tapo_c210_e5f0_move_to_preset
+        data:
+          option: Versteckt
+        perform_action: select.select_option
+      name: Versteckt
+      grid_options:
+        columns: 3
+        rows: 1
+    - show_name: true
+      show_icon: false
+      type: button
+      icon: mdi:cctv
+      tap_action:
+        action: perform-action
+        target:
+          entity_id: select.tapo_c210_e5f0_move_to_preset
+        data:
+          option: Esstich
+        perform_action: select.select_option
+      name: Esstisch
+      grid_options:
+        columns: 3
+        rows: 1
+    - show_name: true
+      show_icon: false
+      type: button
+      icon: mdi:cctv
+      tap_action:
+        action: perform-action
+        target:
+          entity_id: select.tapo_c210_e5f0_move_to_preset
+        data:
+          option: Jungle
+        perform_action: select.select_option
+      name: Jungle
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: tile
+      entity: binary_sensor.tapo_c210_e5f0_cell_motion_detection
+      name: Motion
+      hide_state: false
+      state_content: last_changed
+      vertical: true
+      features_position: bottom
+    - type: tile
+      entity: binary_sensor.tapo_c210_e5f0_person_detection
+      name: Person
+      state_content: last_changed
+      vertical: true
+      features_position: bottom
+    - type: horizontal-stack
+      cards:
+      - type: tile
+        entity: sensor.wz_ins_kamera_power
+        name: ' '
+        icon: mdi:flash
+        vertical: false
+        features_position: bottom
+      - type: tile
+        entity: switch.wz_ins_kamera
+        name: An/Aus
+        hide_state: true
+        vertical: false
+        tap_action:
+          action: toggle
+        hold_action:
+          action: more-info
+        features_position: bottom
+    visibility:
+    - condition: user
+      users:
+      - 10695b18e2cd46eeb52a1393a6db88c9
+  - type: grid
+    cards:
+    - type: heading
+      heading: LSC
+      heading_style: title
+    - camera_view: live
+      fit_mode: cover
+      type: picture-glance
+      image:
+        media_content_id: https://demo.home-assistant.io/stub_config/kitchen.png
+      entities: []
+      camera_image: camera.lsc1_profile_0
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: onvif.ptz
+        data:
+          move_mode: RelativeMove
+          distance: 0.5
+          speed: 1
+          pan: LEFT
+        target:
+          entity_id: camera.lsc1_profile_0
+      icon: mdi:arrow-left-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: onvif.ptz
+        data:
+          move_mode: RelativeMove
+          distance: 0.5
+          speed: 1
+          tilt: UP
+        target:
+          entity_id: camera.lsc1_profile_0
+      icon: mdi:arrow-up-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: onvif.ptz
+        data:
+          move_mode: RelativeMove
+          distance: 0.5
+          speed: 1
+          tilt: DOWN
+        target:
+          entity_id: camera.lsc1_profile_0
+      icon: mdi:arrow-down-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      tap_action:
+        action: perform-action
+        perform_action: onvif.ptz
+        data:
+          move_mode: RelativeMove
+          distance: 0.5
+          speed: 1
+          pan: RIGHT
+        target:
+          entity_id: camera.lsc1_profile_0
+      icon: mdi:arrow-right-bold
+    - show_name: false
+      show_icon: true
+      type: button
+      icon: mdi:weather-sunny
+      name: IR Filter
+      tap_action:
+        action: perform-action
+        perform_action: shell_command.lsc_ircut_day
+    - show_name: false
+      show_icon: true
+      type: button
+      icon: mdi:weather-night
+      name: IR Filter
+      tap_action:
+        action: perform-action
+        perform_action: shell_command.lsc_ircut_night
+        target: {}
+    visibility:
+    - condition: user
+      users:
+      - 10695b18e2cd46eeb52a1393a6db88c9
+  cards: []
+- type: sections
+  title: Wohnzimmer
+  path: kamera-wohnzimmer
+  icon: mdi:sofa
+  subview: true
+  back_path: /dashboard-testdashboard/kamera
+  max_columns: 2
+  sections:
+  - type: grid
+    cards:
+    - type: button
+      name: ● Wohnzimmer
+      icon: mdi:sofa
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Schlafzimmer
+      icon: mdi:bed
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Unterstand
+      icon: mdi:home-roof
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Kamera 4420
+      icon: mdi:cctv
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      grid_options:
+        columns: 3
+        rows: 1
+  - type: grid
+    cards:
+    - type: heading
+      heading: Wohnzimmer
+      icon: mdi:sofa
+      heading_style: title
+    - type: picture-glance
+      camera_image: camera.sonoff_pt2_1_profile_0
+      camera_view: live
+      fit_mode: cover
+      entities: []
+      title: Wohnzimmer
+      grid_options:
+        columns: full
+    - type: button
+      icon: mdi:arrow-left-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_ptz_left_fast
+    - type: button
+      icon: mdi:arrow-up-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_ptz_up_fast
+    - type: button
+      icon: mdi:arrow-down-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_ptz_down_fast
+    - type: button
+      icon: mdi:arrow-right-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_ptz_right_fast
+  - type: grid
+    cards:
+    - type: heading
+      heading: Position
+      heading_style: subtitle
+      icon: mdi:camera-marker-outline
+      entities:
+      - entity: sensor.ing_sonoff_pt2_3684_ptz_preset
+        state_content: state
+    - type: button
+      icon: mdi:numeric-1-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_preset_1_load
+    - type: button
+      icon: mdi:numeric-2-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 2
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_preset_2_load
+    - type: button
+      icon: mdi:numeric-0-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 0
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_preset_0_load
+    - type: button
+      icon: mdi:image-filter-center-focus
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Mitte
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_3684_position_reset
+    - type: heading
+      heading: Licht & Bild
+      heading_style: subtitle
+      icon: mdi:lightbulb-on-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_white_light
+      name: Weißlicht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:light-flood-down
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_ir_light_850nm
+      name: IR-Licht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_ir_cut
+      name: IR-Filter
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:camera-iris
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_color_mode
+      name: Farbe (aus = Schwarzweiß)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:invert-colors
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_status_led
+      name: Status-LED (blau)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-on
+    - type: tile
+      entity: switch.ing_sonoff_pt2_3684_privacy
+      name: Privatsphäre
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:eye-off
+  - type: grid
+    cards:
+    - type: heading
+      heading: Ansage
+      heading_style: subtitle
+      icon: mdi:bullhorn
+    - type: entities
+      entities:
+      - entity: input_text.ansage_text_wohnzimmer
+        name: Text
+      grid_options:
+        columns: 9
+    - type: button
+      name: Senden
+      icon: mdi:send
+      show_state: false
+      tap_action:
+        action: perform-action
+        perform_action: script.tts_kamera_textansage
+        data:
+          kamera: wohnzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+- type: sections
+  title: Schlafzimmer
+  path: kamera-schlafzimmer
+  icon: mdi:bed
+  subview: true
+  back_path: /dashboard-testdashboard/kamera
+  max_columns: 2
+  sections:
+  - type: grid
+    cards:
+    - type: button
+      name: Wohnzimmer
+      icon: mdi:sofa
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: ● Schlafzimmer
+      icon: mdi:bed
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Unterstand
+      icon: mdi:home-roof
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Kamera 4420
+      icon: mdi:cctv
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      grid_options:
+        columns: 3
+        rows: 1
+  - type: grid
+    cards:
+    - type: heading
+      heading: Schlafzimmer
+      icon: mdi:bed
+      heading_style: title
+    - type: picture-glance
+      camera_image: camera.sonoff_pt2_3_profile_0
+      camera_view: live
+      fit_mode: cover
+      entities: []
+      title: Schlafzimmer
+      grid_options:
+        columns: full
+    - type: button
+      icon: mdi:arrow-left-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_ptz_right_fast
+    - type: button
+      icon: mdi:arrow-up-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_ptz_down_fast
+    - type: button
+      icon: mdi:arrow-down-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_ptz_up_fast
+    - type: button
+      icon: mdi:arrow-right-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_ptz_left_fast
+  - type: grid
+    cards:
+    - type: heading
+      heading: Position
+      heading_style: subtitle
+      icon: mdi:camera-marker-outline
+      entities:
+      - entity: sensor.ing_sonoff_pt2_a574_ptz_preset
+        state_content: state
+    - type: button
+      icon: mdi:numeric-1-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_preset_1_load
+    - type: button
+      icon: mdi:incognito
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 0
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_preset_0_load
+    - type: button
+      icon: mdi:image-filter-center-focus
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Mitte
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_a574_position_reset
+    - type: heading
+      heading: Licht & Bild
+      heading_style: subtitle
+      icon: mdi:lightbulb-on-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_ir_light_850nm
+      name: IR-Licht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_ir_cut
+      name: IR-Filter
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:camera-iris
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_color_mode
+      name: Farbe (aus = Schwarzweiß)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:invert-colors
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_status_led
+      name: Status-LED (blau)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-on
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_privacy
+      name: Privatsphäre
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:eye-off
+  - type: grid
+    cards:
+    - type: heading
+      heading: Rauschen
+      heading_style: subtitle
+      icon: mdi:waveform
+    - type: tile
+      entity: switch.ing_sonoff_pt2_a574_noise
+      name: Rauschen
+      vertical: false
+      grid_options:
+        columns: 12
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:waveform
+    - type: tile
+      entity: number.ing_sonoff_pt2_a574_noise_volume
+      name: Lautstärke
+      vertical: false
+      grid_options:
+        columns: 12
+      tap_action:
+        action: more-info
+      icon_tap_action:
+        action: toggle
+      icon: mdi:volume-medium
+      features:
+      - type: numeric-input
+        style: slider
+    - type: tile
+      entity: select.ing_sonoff_pt2_a574_noise_color
+      name: Farbe
+      vertical: false
+      grid_options:
+        columns: 12
+      tap_action:
+        action: more-info
+      icon_tap_action:
+        action: toggle
+      icon: mdi:palette
+      features:
+      - type: select-options
+  - type: grid
+    cards:
+    - type: heading
+      heading: Ansage
+      heading_style: subtitle
+      icon: mdi:bullhorn
+    - type: entities
+      entities:
+      - entity: input_text.ansage_text_schlafzimmer
+        name: Text
+      grid_options:
+        columns: 9
+    - type: button
+      name: Senden
+      icon: mdi:send
+      show_state: false
+      tap_action:
+        action: perform-action
+        perform_action: script.tts_kamera_textansage
+        data:
+          kamera: schlafzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: tile
+      entity: input_boolean.baby_schlaeft
+      name: Baby schläft (dann keine Ansage)
+      vertical: false
+      grid_options:
+        columns: 12
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:baby-face-outline
+- type: sections
+  title: Unterstand
+  path: kamera-unterstand
+  icon: mdi:home-roof
+  subview: true
+  back_path: /dashboard-testdashboard/kamera
+  max_columns: 2
+  sections:
+  - type: grid
+    cards:
+    - type: button
+      name: Wohnzimmer
+      icon: mdi:sofa
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Schlafzimmer
+      icon: mdi:bed
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: ● Unterstand
+      icon: mdi:home-roof
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Kamera 4420
+      icon: mdi:cctv
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      grid_options:
+        columns: 3
+        rows: 1
+  - type: grid
+    cards:
+    - type: heading
+      heading: Unterstand
+      icon: mdi:home-roof
+      heading_style: title
+    - type: picture-glance
+      camera_image: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_1
+      camera_view: live
+      fit_mode: cover
+      entities: []
+      title: Unterstand
+      grid_options:
+        columns: full
+    - type: button
+      icon: mdi:arrow-left-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_ptz_right_fast
+    - type: button
+      icon: mdi:arrow-up-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_ptz_down_fast
+    - type: button
+      icon: mdi:arrow-down-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_ptz_up_fast
+    - type: button
+      icon: mdi:arrow-right-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_ptz_left_fast
+  - type: grid
+    cards:
+    - type: heading
+      heading: Position
+      heading_style: subtitle
+      icon: mdi:camera-marker-outline
+      entities: []
+    - type: button
+      icon: mdi:numeric-1-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_preset_1_load
+    - type: button
+      icon: mdi:numeric-0-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 0
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_preset_0_load
+    - type: button
+      icon: mdi:image-filter-center-focus
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Mitte
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_26a4_position_reset
+    - type: heading
+      heading: Licht & Bild
+      heading_style: subtitle
+      icon: mdi:lightbulb-on-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_white_light
+      name: Weißlicht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:light-flood-down
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_ir_light_850nm
+      name: IR-Licht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_ir_cut
+      name: IR-Filter
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:camera-iris
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_color_mode
+      name: Farbe (aus = Schwarzweiß)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:invert-colors
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_status_led
+      name: Status-LED (blau)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-on
+    - type: tile
+      entity: switch.ing_sonoff_pt2_26a4_privacy
+      name: Privatsphäre
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:eye-off
+  - type: grid
+    cards:
+    - type: heading
+      heading: Ansage
+      heading_style: subtitle
+      icon: mdi:bullhorn
+    - type: entities
+      entities:
+      - entity: input_text.ansage_text_unterstand
+        name: Text
+      grid_options:
+        columns: 9
+    - type: button
+      name: Senden
+      icon: mdi:send
+      show_state: false
+      tap_action:
+        action: perform-action
+        perform_action: script.tts_kamera_textansage
+        data:
+          kamera: unterstand
+      grid_options:
+        columns: 3
+        rows: 1
+- type: sections
+  title: Kamera 4420
+  path: kamera-kamera4420
+  icon: mdi:cctv
+  subview: true
+  back_path: /dashboard-testdashboard/kamera
+  max_columns: 2
+  sections:
+  - type: grid
+    cards:
+    - type: button
+      name: Wohnzimmer
+      icon: mdi:sofa
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-wohnzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Schlafzimmer
+      icon: mdi:bed
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-schlafzimmer
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: Unterstand
+      icon: mdi:home-roof
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-unterstand
+      grid_options:
+        columns: 3
+        rows: 1
+    - type: button
+      name: ● Kamera 4420
+      icon: mdi:cctv
+      show_state: false
+      tap_action:
+        action: navigate
+        navigation_path: /dashboard-testdashboard/kamera-kamera4420
+      grid_options:
+        columns: 3
+        rows: 1
+  - type: grid
+    cards:
+    - type: heading
+      heading: Kamera 4420
+      icon: mdi:cctv
+      heading_style: title
+    - type: picture-glance
+      camera_image: camera.sonoff_pt2_t23n_sc2336p_atbm6012bx_profile_0_2
+      camera_view: live
+      fit_mode: cover
+      entities: []
+      title: Kamera 4420
+      grid_options:
+        columns: full
+    - type: button
+      icon: mdi:arrow-left-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_ptz_left_fast
+    - type: button
+      icon: mdi:arrow-up-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_ptz_up_fast
+    - type: button
+      icon: mdi:arrow-down-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_ptz_down_fast
+    - type: button
+      icon: mdi:arrow-right-bold
+      show_name: false
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_ptz_right_fast
+  - type: grid
+    cards:
+    - type: heading
+      heading: Position
+      heading_style: subtitle
+      icon: mdi:camera-marker-outline
+      entities: []
+    - type: button
+      icon: mdi:numeric-0-box
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Preset 0
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_preset_0_load
+    - type: button
+      icon: mdi:image-filter-center-focus
+      show_name: true
+      show_icon: true
+      grid_options:
+        columns: 3
+        rows: 1
+      name: Mitte
+      tap_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.ing_sonoff_pt2_4420_position_reset
+    - type: heading
+      heading: Licht & Bild
+      heading_style: subtitle
+      icon: mdi:lightbulb-on-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_4420_white_light
+      name: Weißlicht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:light-flood-down
+    - type: tile
+      entity: switch.ing_sonoff_pt2_4420_ir_light_850nm
+      name: IR-Licht
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:led-outline
+    - type: tile
+      entity: switch.ing_sonoff_pt2_4420_ir_cut_filter
+      name: IR-Filter
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:camera-iris
+    - type: tile
+      entity: switch.ing_sonoff_pt2_4420_color_mode
+      name: Farbe (aus = Schwarzweiß)
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:invert-colors
+    - type: tile
+      entity: switch.ing_sonoff_pt2_4420_privacy
+      name: Privatsphäre
+      vertical: false
+      grid_options:
+        columns: 6
+      tap_action:
+        action: toggle
+      icon_tap_action:
+        action: toggle
+      icon: mdi:eye-off
+  - type: grid
+    cards:
+    - type: heading
+      heading: Ansage
+      heading_style: subtitle
+      icon: mdi:bullhorn
+    - type: entities
+      entities:
+      - entity: input_text.ansage_text_kamera4420
+        name: Text
+      grid_options:
+        columns: 9
+    - type: button
+      name: Senden
+      icon: mdi:send
+      show_state: false
+      tap_action:
+        action: perform-action
+        perform_action: script.tts_kamera_textansage
+        data:
+          kamera: kamera4420
+      grid_options:
+        columns: 3
+        rows: 1

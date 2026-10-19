@@ -1,0 +1,47 @@
+tts_kamera_textansage:
+  alias: tts_kamera_textansage
+  description: Liest input_text.ansage_text_<kamera> (Kameraseiten im Testdashboard) und spielt den Text ohne Gong und ohne Licht auf genau dieser Kamera ab. Schlafzimmer
+    entfaellt, solange baby_schlaeft an ist.
+  icon: mdi:bullhorn
+  fields:
+    kamera:
+      name: Kamera
+      required: true
+      selector:
+        select:
+          options:
+          - label: Wohnzimmer
+            value: wohnzimmer
+          - label: Schlafzimmer
+            value: schlafzimmer
+          - label: Unterstand
+            value: unterstand
+          - label: Kamera 4420
+            value: kamera4420
+  sequence:
+  - variables:
+      text: '{{ states(''input_text.ansage_text_'' ~ kamera) | default('''') }}'
+  - if:
+    - condition: template
+      value_template: '{{ text in ['''', ''unknown'', ''unavailable''] }}'
+    then:
+    - stop: Kein Text
+  - if:
+    - condition: template
+      value_template: '{{ kamera == ''schlafzimmer'' and is_state(''input_boolean.baby_schlaeft'', ''on'') }}'
+    then:
+    - action: persistent_notification.create
+      data:
+        title: Ansage
+        notification_id: ansage_schlafzimmer
+        message: Schlafzimmer übersprungen, weil „Baby schläft“ an ist.
+    - stop: Baby schlaeft
+  - action: script.tts_cam_sound_text
+    data:
+      message: '{{ text }}'
+      kameras:
+      - '{{ kamera }}'
+      sound: keiner
+      licht: false
+  mode: queued
+  max: 5

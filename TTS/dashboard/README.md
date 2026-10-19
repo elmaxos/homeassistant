@@ -31,3 +31,11 @@ Helfer (in HA unter *Einstellungen -> Geräte & Dienste -> Helfer* angelegt):
    `dashboard_ansage.json` einfügen (JSON wird als YAML akzeptiert).
 
 Neue Stimme oder neuer Sound: Option im Helfer ergänzen und die Zuordnung in `tts_ansage_senden.yaml` nachziehen.
+
+## Stand 19.10.2026
+
+- Ziele: Wohnzimmer, **Schlafzimmer**, **Unterstand**, Kamera 4420, Handy (`input_boolean.ansage_*`); zusätzlich Kachel
+  „Baby schläft“. Ist `baby_schlaeft` an, wird das Schlafzimmer übersprungen (Benachrichtigung `ansage_schlafzimmer`).
+- Licht: gilt nur für Wohnzimmer, Unterstand, 4420 – das Schlafzimmer hat absichtlich kein Licht.
+- Stopp: zusätzlich `play stop` an Schlafzimmer und Unterstand per MQTT (ein laufendes Rauschen bleibt an),
+  Weißlicht auch am Unterstand aus.

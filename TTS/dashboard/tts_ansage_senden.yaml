@@ -25,31 +25,29 @@ tts_ansage_senden:
         Music Trap: music_trap
         21st Century Fox: 21st_century_fox
         12 Uhr: 12uhr
-      ziele: >-
-        {% set ns = namespace(l=[]) %}
-        {% if is_state('input_boolean.ansage_wohnzimmer', 'on') %}{% set ns.l = ns.l + ['wohnzimmer'] %}{% endif %}
-        {% if is_state('input_boolean.ansage_kamera4420', 'on') %}{% set ns.l = ns.l + ['kamera4420'] %}{% endif %}
-        {% if is_state('input_boolean.ansage_handy', 'on') %}{% set ns.l = ns.l + ['handy'] %}{% endif %}
-        {{ ns.l }}
-      text: "{{ states('input_text.ansage_text') if states('input_text.ansage_text') not in ['unknown', 'unavailable'] else '' }}"
+      ziele: '{% set ns = namespace(l=[]) %}{% if is_state(''input_boolean.ansage_wohnzimmer'', ''on'') %}{% set ns.l = ns.l + [''wohnzimmer''] %}{% endif %}{% if
+        is_state(''input_boolean.ansage_schlafzimmer'', ''on'') %}{% set ns.l = ns.l + [''schlafzimmer''] %}{% endif %}{% if is_state(''input_boolean.ansage_unterstand'',
+        ''on'') %}{% set ns.l = ns.l + [''unterstand''] %}{% endif %}{% if is_state(''input_boolean.ansage_kamera4420'', ''on'') %}{% set ns.l = ns.l + [''kamera4420'']
+        %}{% endif %}{% if is_state(''input_boolean.ansage_handy'', ''on'') %}{% set ns.l = ns.l + [''handy''] %}{% endif %}{{ ns.l }}'
+      text: '{{ states(''input_text.ansage_text'') if states(''input_text.ansage_text'') not in [''unknown'', ''unavailable''] else '''' }}'
   - if:
     - condition: template
-      value_template: "{{ ziele | count == 0 }}"
+      value_template: '{{ ziele | count == 0 }}'
     then:
     - action: persistent_notification.create
       data:
         title: Ansage
-        message: Kein Ziel ausgewählt (Wohnzimmer, Kamera 4420 oder Handy).
+        message: Kein Ziel ausgewählt.
         notification_id: ansage_senden
     - stop: Kein Ziel ausgewählt
   - action: script.tts_cam_sound_text
     data:
-      message: "{{ text }}"
-      kameras: "{{ ziele }}"
-      voice: "{{ stimmen.get(states('input_select.ansage_stimme'), 'de_DE-thorsten-low') }}"
-      sound: "{{ sounds.get(states('input_select.ansage_sound'), 'chime') }}"
-      zweimal: "{{ is_state('input_boolean.ansage_zweimal', 'on') }}"
-      warten: "{{ is_state('input_boolean.ansage_warten', 'on') }}"
-      licht: "{{ is_state('input_boolean.ansage_licht', 'on') }}"
+      message: '{{ text }}'
+      kameras: '{{ ziele }}'
+      voice: '{{ stimmen.get(states(''input_select.ansage_stimme''), ''de_DE-thorsten-low'') }}'
+      sound: '{{ sounds.get(states(''input_select.ansage_sound''), ''chime'') }}'
+      zweimal: '{{ is_state(''input_boolean.ansage_zweimal'', ''on'') }}'
+      warten: '{{ is_state(''input_boolean.ansage_warten'', ''on'') }}'
+      licht: '{{ is_state(''input_boolean.ansage_licht'', ''on'') }}'
   mode: queued
   max: 5
