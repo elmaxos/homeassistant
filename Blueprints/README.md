@@ -33,8 +33,8 @@ solange `event_type` der Taste `long_press` ist; `long_release` startet die Auto
 
 | Taste | einfach | doppelt | lang (halten) |
 |---|---|---|---|
-| oben (1) | Bettlicht an (immer 1 %, 1 s Übergang) / aus (`light.sz_tra_bett`) | Rauschen an: lauter (+10, max. 80) · Rauschen aus: Kamera **Preset 0** (versteckt) | Licht an: heller bis 100 % · Licht aus: **Baby wach** |
-| unten (2) | Rauschen an/aus (`switch.ing_sonoff_pt2_a574_noise`) | Rauschen an: leiser (−10, min. 10) · Rauschen aus: Kamera **Preset 1** | Licht an: dunkler bis 1 % (bleibt an) · Licht aus: **Baby schläft** |
+| oben (1) | Bettlicht an (immer 1 %, 1 s Übergang) / aus (`light.sz_tra_bett`) | Rauschen an: lauter (+10, max. 80) · Rauschen aus: Kamera **Preset 0** (versteckt) | Licht an: heller bis 100 % · Licht aus: **Baby wach** + ALPSTUGA-Display an |
+| unten (2) | Rauschen an/aus (`switch.ing_sonoff_pt2_a574_noise`) | Rauschen an: leiser (−10, min. 10) · Rauschen aus: Kamera **Preset 1** | Licht an: dunkler bis 1 % (bleibt an) · Licht aus: **Baby schläft** + ALPSTUGA-Display aus |
 
 - Lautstärke: `number.ing_sonoff_pt2_a574_noise_volume`; wirkt sofort, wenn das Rauschen läuft.
 - Presets: `button.ing_sonoff_pt2_a574_preset_0_load` / `_preset_1_load`.

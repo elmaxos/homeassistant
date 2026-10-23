@@ -13,7 +13,8 @@ Helfer `input_boolean.baby_schlaeft` wird über die Fernbedienung gesetzt (Licht
 ## Helfer `input_boolean.baby_schlaeft`
 
 - **Zeitplan** ([automationen/baby_schlaeft_zeitplan.yaml](automationen/baby_schlaeft_zeitplan.yaml)): jeden Tag 22:00 an, 09:00 aus.
-- **Fernbedienung** `BILBUT_SZ_Tuer`: Licht aus + oben halten = wach, unten halten = schläft.
+- **Fernbedienung** `BILBUT_SZ_Tuer`: Licht aus + oben halten = wach (ALPSTUGA-Display `switch.sz_alp_bett` an),
+  unten halten = schläft (Display aus). Der Zeitplan schaltet das Display nicht.
 - Wirkt auf:
   - `Sz_alp_an_aus`: Display bei Bewegung nur an, wenn das Baby **nicht** schläft.
   - `Tuer_auf_sz_az_licht_aus` ([automationen/tuer_auf_sz_az_licht_aus.yaml](automationen/tuer_auf_sz_az_licht_aus.yaml)):
