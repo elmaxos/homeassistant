@@ -66,11 +66,15 @@ mode: parallel
 max: 10
 
 triggers:
+  # not_from: kommt die Fernbedienung nach einem Ausfall zurueck (unavailable -> letzter Event-Zeitstempel),
+  # ist das kein Tastendruck (sonst ging nachts das Licht an, 24.10.2026)
   - trigger: state
     entity_id: !input taste_1
+    not_from: [unavailable, unknown]
     id: taste_1
   - trigger: state
     entity_id: !input taste_2
+    not_from: [unavailable, unknown]
     id: taste_2
 
 conditions:
